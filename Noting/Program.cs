@@ -1,9 +1,36 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Noting;
+using Noting.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// For MVC
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddRazorComponents();
+DatabaseManipulator.Initialize(builder.Configuration);
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Auth/LoginView";
+        options.LogoutPath = "/Auth/Logout";
+        options.AccessDeniedPath = "/Auth/LoginView";
+        options.Cookie.Name = "NotingCookie";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Strict;
+    });
+
+builder.Services
+    .AddRazorComponents()
+    .AddInteractiveServerComponents();
+
+// Blazor Server
+builder.Services.AddServerSideBlazor();
+
+// SignalR Blazor Server needs it for something ???
+builder.Services.AddSignalR();
+
 
 var app = builder.Build();
 
@@ -23,10 +50,15 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
+app.UseAntiforgery();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
 
 app.Run();

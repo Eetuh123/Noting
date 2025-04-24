@@ -1,0 +1,21 @@
+﻿@model Noting.Models.User
+@{
+	ViewData["Title"] = "Login";
+}
+<div>
+	<form 
+	asp-asp-controller="Auth"
+	asp-action="LoginUser"
+	method="post"
+	>
+		Login
+		@Html.TextBoxFor(u => u.Email, new
+			{
+				placeholder = "Random name"
+			})
+
+		<button type="submit">Login</button>
+	</form>
+
+
+</div>

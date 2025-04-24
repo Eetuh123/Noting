@@ -1,0 +1,27 @@
+﻿@model Noting.Models.User
+@{
+	ViewData["Title"] = "Register";
+}
+<div>
+	<form asp-asp-controller="Auth"
+		  asp-action="RegisterUser"
+		  method="post">
+		Login
+		@Html.TextBoxFor(u => u.Email, new
+			{
+				placeholder = "Random name"
+			})
+		@Html.TextBoxFor(u => u.Name, new
+			{
+				placeholder = "Name"
+			})
+		@Html.PasswordFor(u => u.PasswordHash, new
+			{
+				placeholder = "Password"
+			})
+
+		<button type="submit">Register</button>
+	</form>
+
+
+</div>
