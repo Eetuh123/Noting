@@ -1,9 +1,25 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Noting;
+using Noting.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // For MVC
 builder.Services.AddControllersWithViews();
+
+DatabaseManipulator.Initialize(builder.Configuration);
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Auth/LoginView";
+        options.LogoutPath = "/Auth/Logout";
+        options.AccessDeniedPath = "/Auth/LoginView";
+        options.Cookie.Name = "NotingCookie";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Strict;
+    });
 
 builder.Services
     .AddRazorComponents()
@@ -34,6 +50,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
 
