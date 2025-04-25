@@ -20,15 +20,38 @@ namespace Noting.Controllers
         {
             return View();
         }
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> LoginUser(string email, string password)
-        //{
-        //    var user = DatabaseManipulator.database?
-        //        .GetCollection<User>("User")
-        //        .Find(u => u.Email == email)
-        //        .FirstOrDefault();
-        //}
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LoginUser(User user)
+        {
+            var email = user.Email;
+            var password = user.PasswordHash;
+
+            var existingUser = DatabaseManipulator.database?
+                .GetCollection<User>("User")
+                .Find(u => u.Email == email)
+                .FirstOrDefault();
+            if (existingUser == null)
+                return RedirectToAction("Login", "Auth");
+
+            bool isPlainText = !existingUser.PasswordHash.StartsWith("$2") && !existingUser.PasswordHash.StartsWith("AQAAAA");
+            if (isPlainText && existingUser.PasswordHash == password)
+            {
+                existingUser.PasswordHash = _passwordHasher.HashPassword(existingUser, password);
+                DatabaseManipulator.database?
+                    .GetCollection<User>("User")
+                    .ReplaceOne(u => u.Id == existingUser.Id, existingUser);
+            }
+
+            else if (_passwordHasher.VerifyHashedPassword(existingUser, existingUser.PasswordHash, password) != PasswordVerificationResult.Success)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            await SignInUserAsync(existingUser);
+
+            return RedirectToAction("Index", "Main");
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RegisterUser(User user)
@@ -45,9 +68,16 @@ namespace Noting.Controllers
             user.PasswordHash = _passwordHasher.HashPassword(user, user.PasswordHash);
             DatabaseManipulator.Save(user);
 
+            await SignInUserAsync(user);
+
+            return RedirectToAction("Index", "Main");
+        }
+        private async Task SignInUserAsync(User user)
+        {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Email, user.Email)
+                new Claim(ClaimTypes.Name, user.Name),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             };
             var claimsIdentity = new ClaimsIdentity(claims, "User");
             var authProperties = new AuthenticationProperties
@@ -58,8 +88,12 @@ namespace Noting.Controllers
             };
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity), authProperties);
-
-            return RedirectToAction("Index", "Main");
+        }
+        [HttpGet]
+        public IActionResult Logout()
+        {
+            HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Login", "Auth");
         }
     }
 }

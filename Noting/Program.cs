@@ -12,9 +12,9 @@ DatabaseManipulator.Initialize(builder.Configuration);
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Auth/LoginView";
+        options.LoginPath = "/Auth/Login";
         options.LogoutPath = "/Auth/Logout";
-        options.AccessDeniedPath = "/Auth/LoginView";
+        options.AccessDeniedPath = "/Auth/Login";
         options.Cookie.Name = "NotingCookie";
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
@@ -56,7 +56,7 @@ app.UseAntiforgery();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Main}/{action=Index}/{id?}");
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

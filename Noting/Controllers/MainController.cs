@@ -1,9 +1,10 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Noting.Models;
 
 namespace Noting.Controllers;
-
+[Authorize]
 public class MainController : Controller
 {
     private readonly ILogger<MainController> _logger;
@@ -12,7 +13,6 @@ public class MainController : Controller
     {
         _logger = logger;
     }
-
     public IActionResult Index()
     {
         return View();
