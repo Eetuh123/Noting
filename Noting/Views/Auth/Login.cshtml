@@ -13,6 +13,10 @@
 			{
 				placeholder = "Random name"
 			})
+		@Html.PasswordFor(u => u.PasswordHash, new
+			{
+				placeholder = "Password"
+			})
 
 		<button type="submit">Login</button>
 	</form>
