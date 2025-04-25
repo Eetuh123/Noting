@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Server;
 using Noting;
 using Noting.Models;
 
@@ -18,8 +20,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.Name = "NotingCookie";
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        options.Cookie.SameSite = SameSiteMode.Strict;
+        options.Cookie.SameSite = SameSiteMode.Lax;
     });
+builder.Services.AddAuthorization();
 
 builder.Services
     .AddRazorComponents()
@@ -28,14 +31,14 @@ builder.Services
 // Blazor Server
 builder.Services.AddServerSideBlazor();
 
+// Cookies for Blazor
+builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
+
 // SignalR Blazor Server needs it for something ???
 builder.Services.AddSignalR();
 
 
 var app = builder.Build();
-
-app.MapBlazorHub();
-
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -52,8 +55,10 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.UseAntiforgery();
 
+app.MapBlazorHub();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Main}/{action=Index}/{id?}");

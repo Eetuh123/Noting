@@ -17,7 +17,6 @@ public class MainController : Controller
     {
         return View();
     }
-
     public IActionResult Privacy()
     {
         return View();

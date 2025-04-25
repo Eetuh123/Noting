@@ -79,7 +79,7 @@ namespace Noting.Controllers
                 new Claim(ClaimTypes.Name, user.Name),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             };
-            var claimsIdentity = new ClaimsIdentity(claims, "User");
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var authProperties = new AuthenticationProperties
             {
                 AllowRefresh = true,

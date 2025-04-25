@@ -1,0 +1,15 @@
+﻿@page "/hello"
+@attribute [Authorize]
+
+<AuthorizeView Context="auth">
+    <Authorized>
+        <p>User is authenticated as @auth.User.Identity.Name</p>
+    </Authorized>
+    <NotAuthorized>
+        <p>User is NOT authenticated in Blazor.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+}
