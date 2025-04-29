@@ -1,9 +1,21 @@
 ﻿@page "/hello"
 @attribute [Authorize]
+@using MongoDB.Bson
+@using System.Security.Claims
+@using Noting.Models
+@using Noting.Services
+@inject ExerciseService ExerciseSvc
+@inject AuthenticationStateProvider AuthProv
 
 <AuthorizeView Context="auth">
     <Authorized>
-        <p>User is authenticated as @auth.User.Identity.Name</p>
+        <input type="text"
+               @bind="exercise.RawText"
+               placeholder="e.g. 50kg bench 3x10" />
+        <button @onclick="OnSubmit">Save</button>
+
+
+
     </Authorized>
     <NotAuthorized>
         <p>User is NOT authenticated in Blazor.</p>
@@ -12,4 +24,28 @@
 
 
 @code {
+    private Exercise exercise = new Exercise
+    {
+            RawText = "",
+            NameTag = "",
+            Weight = 0,
+            Date = DateTime.UtcNow,
+    };
+
+    private async Task OnSubmit()
+    {
+
+        var authState = await AuthProv.GetAuthenticationStateAsync();
+        var idClaim = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!ObjectId.TryParse(idClaim, out var userId))
+        {
+
+            return;
+        }
+
+        await ExerciseSvc.SaveFromText(exercise.RawText, userId);
+
+        exercise.RawText = "";
+    }
 }
