@@ -12,7 +12,6 @@ namespace Noting.Models
         public required int Weight { get; set; }
         public List<RepEntry> Reps { get; set; } = new();
         public string Notes { get; set; } = string.Empty;
-        public int Sets => Reps.Count;
 
         public required DateTime Date { get; set; }
         public required string RawText { get; set; }
