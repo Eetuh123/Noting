@@ -1,0 +1,8 @@
+{
+  "Patterns": [
+    {
+      "Name": "Tokenize",
+      "Pattern": "(?<Number>\\d+)|(?<Unit>kg|lb)|(?<Separator>x)|(?<Word>[a-zA-Z]+)|(?<Other>\\S)"
+    }
+  ]
+}

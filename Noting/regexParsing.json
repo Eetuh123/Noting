@@ -1,0 +1,48 @@
+{
+  "Patterns": [
+    {
+      "Name": "ReplaceCommonPunctuation",
+      "Type": "Cleanup",
+      "Pattern": "[():@]",
+      "Replacement": " "
+    },
+    {
+      "Name": "NormalizeRepsSeparatorWithXAndSpace",
+      "Type": "Cleanup",
+      "Pattern": "(?<=\\d)[*\\+,\\-\\.](?=\\d)|(?<=\\d)\\s*x(?=\\d)",
+      "Replacement": "x"
+    },
+    {
+      "Name": "NormalizeRepsSeparator",
+      "Type": "Cleanup",
+      "Pattern": "(?<=\\d)[*\\+,\\-\\.\\/](?=\\d)",
+      "Replacement": "x"
+    },
+    {
+      "Name": "CollapseSpacesAroundX",
+      "Type": "Cleanup",
+      "Pattern": "\\s*x\\s*",
+      "Replacement": "x"
+    },
+    {
+      "Name": "RepsSequence",
+      "Type": "Parsing",
+      "Pattern": "\\b(\\d+(?:x\\d+){2,})\\b"
+    },
+    {
+      "Name": "WeightWithUnits",
+      "Type": "Parsing",
+      "Pattern": "\\b(?<weight>\\d+(?:\\.\\d+)?)(?<unit>kg|lb)\\b"
+    },
+    {
+      "Name": "OnlySingleNumber",
+      "Type": "Parsing",
+      "Pattern": "^\\d+(\\.\\d+)?$"
+    },
+    {
+      "Name": "NameWithSpace",
+      "Type": "Parsing",
+      "Pattern": "\\b[A-Za-z]+\\b"
+    }
+  ]
+}

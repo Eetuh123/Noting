@@ -2,19 +2,19 @@
 {
     public class RepEntry
     {
-        public int? Count { get; set; }
+        public int? Reps { get; set; }
 
-        public bool IsFailure => !Count.HasValue;
+        public bool IsFailure => !Reps.HasValue;
 
         public RepEntry(int count)
         {
-            Count = count;
+            Reps = count;
         }
         public RepEntry()
         {
-            Count = null;
+            Reps = null;
         }
         public override string ToString() =>
-            IsFailure ? "failure" : Count.Value.ToString();
+            IsFailure ? "failure" : Reps.Value.ToString();
     }
 }
