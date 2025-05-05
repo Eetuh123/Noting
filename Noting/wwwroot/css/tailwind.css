@@ -1,1 +1,24 @@
+@font-face {
+    font-family: Raleway;
+    src: url('../fonts/Raleway-VariableFont_wght.ttf');
+    font-weight: 100 900;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: Raleway;
+    src: url('../fonts/Raleway-Italic-VariableFont_wght.ttf');
+    font-weight: 100 900;
+    font-style: italic;
+}
+
 @import "tailwindcss";
+
+@theme {
+    --font-raleway: Raleway, "sans-serif";
+    --color-divider: #E0E0E0;
+    --color-surface-main: #FAFAFA;
+    --color-surface-dark: #1A1A1A;
+    --color-highlight: #DC4C42;
+    --color-surface-muted: #888888;
+}

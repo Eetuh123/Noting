@@ -1,16 +1,13 @@
 ﻿@inherits LayoutComponentBase
 
-<div style="display: flex; height: 100vh;">
-
-    <div style="width: 250px; background: #f3f3f3; padding: 1rem;">
+<div class="flex h-screen text-surface-dark">
+    <!-- Sidebar -->
+    <div class="w-80 bg-surface-main border-outline border-r p-2 flex flex-col items-center space-y-6 text-xl">
         <SidebarComponent />
     </div>
 
-
-    <div style="flex-grow: 1; padding: 1rem;">
+    <!-- Main content area -->
+    <div class="flex-1 p-4 overflow-auto">
         @Body
     </div>
 </div>
-@code {
-
-}

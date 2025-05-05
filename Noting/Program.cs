@@ -52,6 +52,10 @@ app.UseAuthorization();
 // 1) Blazor’s real-time SignalR endpoint
 app.MapBlazorHub();
 
+app.MapControllerRoute(
+    name: "default",
+    pattern: "/",
+    defaults: new { controller = "Auth", action = "Welcome" });
 // 2) MVC controllers under specific prefixes
 app.MapControllerRoute(
     name: "auth",

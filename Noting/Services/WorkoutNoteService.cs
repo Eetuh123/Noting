@@ -34,5 +34,13 @@ namespace Noting.Services
                 .SortByDescending(n => n.Date)
                 .ToListAsync();
         }
+        public async Task<WorkoutNote?> GetNoteByIdAsync(ObjectId id)
+        {
+            return await DatabaseManipulator
+                .database
+                .GetCollection<WorkoutNote>(nameof(WorkoutNote))
+                .Find(n => n.Id == id)
+                .FirstOrDefaultAsync();
+        }
     }
 }
