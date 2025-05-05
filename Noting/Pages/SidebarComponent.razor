@@ -1,9 +1,8 @@
-﻿@page "/notes"
-@implements IDisposable
+﻿@using Noting.Models
+@using Noting.Services
+@using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Authorization
 @using MongoDB.Bson
-@using Noting.Models
-@using Noting.Services
 @using System.Security.Claims
 @inject WorkoutNoteService NoteService
 @inject AuthenticationStateProvider AuthStateProvider
@@ -13,6 +12,7 @@
     <ul class="flex space-x-4">
         <li><NavLink href="/" Match="NavLinkMatch.All">Home</NavLink></li>
         <li><button @onclick="ToggleSearch">Search</button></li>
+        <li><button @onclick="CreateNewNote">New Note</button></li>
         <li><NavLink href="/graphs" Match="NavLinkMatch.Prefix">Graphs</NavLink></li>
         <li><a href="/auth/logout">Logout</a></li>
     </ul>
@@ -20,7 +20,13 @@
 
 @if (_isSearchVisible)
 {
-    <SearchBar />
+    <div class="fixed inset-0" @onclick="ToggleSearch"></div>
+
+    <div class="absolute inset-0 m-auto h-fit z-20" @onclick:stopPropagation>
+        <div class="max-w-xl mx-auto">
+            <SearchBar OnSearchChanged="ApplyFilters" />
+        </div>
+    </div>
 }
 
 <div class="bg-surface-main shadow rounded-lg p-4 divide-y divide-gray-200 h-screen overflow-y-auto">
@@ -59,14 +65,9 @@
 
 @code {
     private bool _isSearchVisible;
-
-    private class Section
-    {
-        public string Title { get; set; }
-        public List<WorkoutNote> Notes { get; set; }
-    }
-
+    private List<WorkoutNote> _allNotes = new();
     private List<Section> Sections = new();
+    private ObjectId _userId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -76,53 +77,107 @@
         var idStr = auth.User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!ObjectId.TryParse(idStr, out var userId))
             return;
+        _userId = userId;
 
-        var allNotes = await NoteService.GetNotesForUserAsync(userId);
-        if (allNotes == null || !allNotes.Any())
-            return;
+        var notes = await NoteService.GetNotesForUserAsync(userId);
+        if (notes != null && notes.Any())
+        {
+            _allNotes = notes;
+            Sections = BuildSections(_allNotes);
+        }
+    }
+    private void CreateNewNote()
+    {
 
+        var note = new WorkoutNote
+            {
+                UserId = _userId,
+                Date = DateTime.Today,
+                NameTag = "New Note",
+                NoteText = "",
+                Exercises = new List<Exercise>()
+            };
+
+        note = NoteService.SaveNote(note);
+
+        _allNotes.Insert(0, note);
+        Sections = BuildSections(_allNotes);
+
+        NavManager.NavigateTo($"/note/{note.Id}");
+    }
+
+    private void ApplyFilters(List<string> terms)
+    {
+        var q = _allNotes.AsEnumerable();
+
+        // split out anything parsable as a date
+        var dateTokens = terms
+          .Select(t => (raw: t, ok: DateTime.TryParse(t, out var dt) ? (DateTime?)dt.Date : null))
+          .Where(x => x.ok.HasValue)
+          .Select(x => x.ok.Value)
+          .Distinct();
+
+        foreach (var dt in dateTokens)
+            q = q.Where(n => n.Date.Date == dt);
+
+        // all the rest as name substrings
+        var nameTokens = terms.Except(dateTokens.Select(d => d.ToShortDateString()));
+        foreach (var nt in nameTokens)
+            q = q.Where(n =>
+              n.NameTag.Contains(nt, StringComparison.OrdinalIgnoreCase));
+
+        Sections = BuildSections(q.ToList());
+        StateHasChanged();
+    }
+
+    private List<Section> BuildSections(List<WorkoutNote> notes)
+    {
+        var sections = new List<Section>();
         var today = DateTime.Today;
 
-        // “Today”
-        var todayNotes = allNotes
-            .Where(n => n.Date.Date == today)
-            .OrderByDescending(n => n.Date)
-            .ToList();
+        // Today
+        var todayNotes = notes
+          .Where(n => n.Date.Date == today)
+          .OrderByDescending(n => n.Date)
+          .ToList();
         if (todayNotes.Any())
-            Sections.Add(new Section { Title = "Today", Notes = todayNotes });
+            sections.Add(new Section { Title = "Today", Notes = todayNotes });
 
-        // “Past 30 days”
-        var past30 = allNotes
-            .Where(n => n.Date.Date >= today.AddDays(-30) && n.Date.Date < today)
-            .OrderByDescending(n => n.Date)
-            .ToList();
+        // Past 30 days
+        var past30 = notes
+          .Where(n => n.Date.Date >= today.AddDays(-30) && n.Date.Date < today)
+          .OrderByDescending(n => n.Date)
+          .ToList();
         if (past30.Any())
-            Sections.Add(new Section { Title = "Past 30 days", Notes = past30 });
+            sections.Add(new Section { Title = "Past 30 days", Notes = past30 });
 
-        // Older, grouped by “MMMM yyyy”
-        var earlier = allNotes
-            .Where(n => n.Date.Date < today.AddDays(-30))
-            .GroupBy(n => n.Date.ToString("MMMM yyyy"))
-            .OrderByDescending(g => DateTime.ParseExact(g.Key, "MMMM yyyy", null));
+        // Older, by month/year
+        var earlier = notes
+          .Where(n => n.Date.Date < today.AddDays(-30))
+          .GroupBy(n => n.Date.ToString("MMMM yyyy"))
+          .OrderByDescending(g =>
+            DateTime.ParseExact(g.Key, "MMMM yyyy", null));
         foreach (var grp in earlier)
         {
-            Sections.Add(new Section
+            sections.Add(new Section
                 {
                     Title = grp.Key,
                     Notes = grp.OrderByDescending(n => n.Date).ToList()
                 });
         }
+
+        return sections;
     }
 
     private void ToggleSearch() => _isSearchVisible = !_isSearchVisible;
+    private void HandleLocationChanged(object? s, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+      => StateHasChanged();
 
-    private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
-    {
-        StateHasChanged();
-    }
+    public void Dispose() => NavManager.LocationChanged -= HandleLocationChanged;
 
-    public void Dispose()
+    private class Section
     {
-        NavManager.LocationChanged -= HandleLocationChanged;
+        public string Title { get; set; }
+        public List<WorkoutNote> Notes { get; set; }
     }
 }

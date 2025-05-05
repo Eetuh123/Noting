@@ -5,6 +5,7 @@ using static Noting.Models.DatabaseManipulator;
 
 namespace Noting.Models
 {
+    [BsonIgnoreExtraElements]
     public class WorkoutNote : IMongoDocument
     {
         [BsonId]
@@ -16,6 +17,11 @@ namespace Noting.Models
         public DateTime Date { get; set; }
 
         public string NoteText { get; set; } = "";
+
+        [BsonElement("exerciseIds")]
+        public List<ObjectId> ExerciseIds { get; set; } = new();
+
+        [BsonIgnore]
         public List<Exercise> Exercises { get; set; } = new();
     }
 }

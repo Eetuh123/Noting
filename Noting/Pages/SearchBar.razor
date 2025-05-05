@@ -1,52 +1,48 @@
-﻿@using Microsoft.AspNetCore.Components.Web
-<div class="absolute inset-0 m-auto h-fit">
-<div class="max-w-xl mx-auto">
-    <div class="flex items-center space-x-2 bg-gray-100 rounded-lg shadow p-2">
-        <!-- magnifier icon -->
-        <svg class="w-5 h-5 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M21 21l-4.35-4.35m0 0a7.5 7.5 0 10-10.6 0 7.5 7.5 0 0010.6 0z" />
-        </svg>
+﻿@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
 
-        <!-- tags -->
-        @foreach (var tag in Tags)
-        {
-            <span class="flex items-center bg-gray-300 text-gray-700 text-sm px-3 py-1 rounded-full">
-                @tag
-                <button type="button"
-                        class="ml-2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                        @onclick="() => RemoveTag(tag)">
-                    &times;
-                </button>
-            </span>
-        }
+<div class="flex items-center space-x-2 bg-gray-100 rounded-lg shadow p-2">
+    <svg class="w-5 h-5 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-4.35-4.35m0 0a7.5 7.5 0 10-10.6 0 7.5 7.5 0 0010.6 0z" />
+    </svg>
 
-        <!-- input -->
-        <input class="flex-1 bg-transparent focus:outline-none px-2 py-1 text-gray-900"
-               placeholder="Type to search…"
-               @bind="CurrentEntry"
-               @bind:event="oninput"
-               @onkeydown="OnKeyDown" />
-    </div>
+    @foreach (var term in Terms)
+    {
+        <span class="flex items-center bg-gray-300 text-gray-700 text-sm px-3 py-1 rounded-full cursor-pointer"
+              @onclick="() => RemoveTerm(term)">
+            @term
+        </span>
+    }
+
+    <input class="flex-1 bg-transparent focus:outline-none px-2 py-1 text-gray-900"
+           placeholder="Type to search…"
+           @bind="CurrentEntry"
+           @bind:event="oninput"
+           @onkeydown="OnKeyDown" />
 </div>
-</div>
+
 @code {
-    private List<string> Tags = new();
+    [Parameter] public EventCallback<List<string>> OnSearchChanged { get; set; }
+
+    private List<string> Terms = new();
     private string CurrentEntry;
 
     private void OnKeyDown(KeyboardEventArgs e)
     {
         if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(CurrentEntry))
         {
-            var tag = CurrentEntry.Trim();
-            if (!Tags.Contains(tag))
-                Tags.Add(tag);
+            var term = CurrentEntry.Trim();
+            if (!Terms.Contains(term))
+                Terms.Add(term);
             CurrentEntry = "";
+            OnSearchChanged.InvokeAsync(Terms.ToList());
         }
     }
 
-    private void RemoveTag(string tag)
+    private void RemoveTerm(string term)
     {
-        Tags.Remove(tag);
+        Terms.Remove(term);
+        OnSearchChanged.InvokeAsync(Terms.ToList());
     }
 }

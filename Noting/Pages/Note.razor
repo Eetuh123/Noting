@@ -10,36 +10,36 @@
 
 @if (!IsLoaded)
 {
-  <p>Loading…</p>
+    <p>Loading…</p>
 }
 else
 {
     <div class="border-b-1 border-divider mx-8 text-center font-semibold">
-  <h3 class="pb-4">@Tag</h3>
+        <input class="text-xl font-semibold focus:outline-none"
+               @bind="Tag"
+               @bind:event="oninput"
+               @onblur="SaveTag" />
     </div>
-  <textarea
-    @bind="NoteText"
-    @onblur="SaveNote"
-    style="width:100%; height:80vh">
-  </textarea>
-  <p>@SaveStatus</p>
+
+    <textarea @bind="NoteText"
+              @onblur="SaveNote"
+              style="width:100%; height:80vh">
+      </textarea>
+    <p>@SaveStatus</p>
 }
 
-
 @code {
-  [Parameter] public string Tag { get; set; }
-   [Parameter] public string Id { get; set; }
+    [Parameter] public string Id { get; set; }
 
-  private WorkoutNote? CurrentNote;
-  private ObjectId UserId;
-  private DateTime Date;
-  private string NoteText = "";
-  private bool IsLoaded = false;
-  private string SaveStatus = "";
+    private WorkoutNote CurrentNote;
+    private ObjectId UserId;
+    private string Tag;
+    private string NoteText = "";
+    private bool IsLoaded = false;
+    private string SaveStatus = "";
 
-  protected override async Task OnInitializedAsync()
-  {
-
+    protected override async Task OnInitializedAsync()
+    {
         if (!ObjectId.TryParse(Id, out var noteId))
             throw new Exception("Invalid note ID");
 
@@ -47,12 +47,22 @@ else
         if (CurrentNote == null)
             throw new Exception("Note not found");
 
+        Tag = CurrentNote.NameTag;
         NoteText = CurrentNote.NoteText;
         UserId = CurrentNote.UserId;
-        Date = CurrentNote.Date;
-        Tag = CurrentNote.NameTag;
         IsLoaded = true;
-  }
+    }
+
+    private async Task SaveTag()
+    {
+        if (CurrentNote.NameTag != Tag)
+        {
+            CurrentNote.NameTag = Tag;
+            NoteService.SaveNote(CurrentNote);
+            SaveStatus = $"Tag saved at {DateTime.Now:T}";
+            StateHasChanged();
+        }
+    }
 
     private async Task SaveNote()
     {
@@ -61,19 +71,20 @@ else
           .Replace("\r", "\n")
           .Split('\n')
           .Select(l => l.Trim())
-          .Where(l => !string.IsNullOrEmpty(l))
+          .Where(l => l.Length > 0)
           .ToList();
+
+        var ids = new List<ObjectId>();
 
         foreach (var line in lines)
         {
-            await ExerciseService.SaveFromText(line, UserId);
+            var ex = await ExerciseService.SaveFromText(line, UserId);
+            ids.Add(ex.Id);
         }
 
-        CurrentNote.NoteText = NoteText;
-        CurrentNote.Exercises = new List<Exercise>();
-
+        CurrentNote.ExerciseIds = ids;
         NoteService.SaveNote(CurrentNote);
 
-        SaveStatus = $"Saved at {DateTime.Now:T} ({lines.Count} exercise(s))";
+        SaveStatus = $"Saved at {DateTime.Now:T} ({ids.Count} exercises)";
     }
 }

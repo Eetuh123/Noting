@@ -26,28 +26,25 @@ namespace Noting.Services
             _tokenizer = RegexPatterns.LoadLookup("lexerPatterns.json")["Tokenize"];
         }
         [Authorize]
-        public Task SaveFromText(string rawText, ObjectId userId)
+        public async Task<Exercise> SaveFromText(string rawText, ObjectId userId)
         {
+
             var cleanText = rawText.ToLowerInvariant();
-
             foreach (var rule in _cleanupRules)
-            {
-
                 cleanText = new Regex(rule.Pattern, RegexOptions.IgnoreCase)
                                 .Replace(cleanText, rule.Replacement);
-            }
+
 
             var matches = _tokenizer.Matches(cleanText);
             var tokens = matches
-            .Select(m =>
-            {
-                var group = m.Groups
-                             .Cast<Group>()
-                             .First(g => g.Success && g.Name != "0");
-                return new Token { Type = group.Name, Value = m.Value };
-            })
-            .ToList();
-
+              .Select(m =>
+              {
+                  var group = m.Groups
+                               .Cast<Group>()
+                               .First(g => g.Success && g.Name != "0");
+                  return new Token { Type = group.Name, Value = m.Value };
+              })
+              .ToList();
             var parsed = ParseTokens(tokens);
 
             var exercise = new Exercise
@@ -61,10 +58,16 @@ namespace Noting.Services
                 Notes = parsed.Notes
             };
 
-            DatabaseManipulator.Save(exercise);
+            await DatabaseManipulator
+              .database
+              .GetCollection<Exercise>(nameof(Exercise))
+              .ReplaceOneAsync(
+                 e => e.Id == exercise.Id,
+                 exercise,
+                 new ReplaceOptions { IsUpsert = true }
+              );
 
-            return Task.CompletedTask;
-
+            return exercise;
         }
         public ParsedExercise ParseTokens(List<Token> tokens)
         {
