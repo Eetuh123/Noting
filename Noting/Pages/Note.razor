@@ -1,0 +1,83 @@
+﻿@page "/note/{Tag}/{DateParam}"
+@using MongoDB.Bson
+@using Noting.Models
+@using Noting.Services
+@inject AuthenticationStateProvider AuthStateProvider
+@inject WorkoutNoteService NoteService
+@inject ExerciseService ExerciseService
+@using System.Security.Claims
+@layout MainLayout
+
+@if (!IsLoaded)
+{
+  <p>Loading…</p>
+}
+else
+{
+  <h3>@Tag (@Date.ToShortDateString())</h3>
+  <textarea
+    @bind="NoteText"
+    @onblur="SaveNote"
+    style="width:100%; height:80vh">
+  </textarea>
+  <p>@SaveStatus</p>
+}
+
+
+@code {
+  [Parameter] public string Tag { get; set; }
+  [Parameter] public string DateParam { get; set; }
+
+  private ObjectId UserId;
+  private DateTime Date;
+  private string NoteText = "";
+  private bool IsLoaded = false;
+  private string SaveStatus = "";
+
+  protected override async Task OnInitializedAsync()
+  {
+
+    var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+    var idStr = auth.User.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (!ObjectId.TryParse(idStr, out UserId))
+        throw new Exception("Invalid user");
+
+    if (!DateTime.TryParse(DateParam, out Date))
+        throw new Exception("Bad date");
+
+    var existing = NoteService.GetNote(UserId, Tag, Date);
+    if (existing != null)
+      NoteText = existing.NoteText;
+
+    IsLoaded = true;
+  }
+
+  private async Task SaveNote()
+  {
+
+    var lines = NoteText
+      .Replace("\r\n", "\n")
+      .Replace("\r",   "\n")
+      .Split('\n')
+      .Select(l => l.Trim())
+      .Where(l => !string.IsNullOrEmpty(l))
+      .ToList();
+
+    foreach (var line in lines)
+    {
+      await ExerciseService.SaveFromText(line, UserId);
+    }
+
+    var note = new WorkoutNote {
+      Id       = ObjectId.GenerateNewId(),
+      UserId   = UserId,
+      NameTag  = Tag,
+      Date     = Date,
+      NoteText = NoteText,
+      Exercises= new List<Exercise>()
+    };
+    NoteService.SaveNote(note);
+
+    SaveStatus = $"Saved at {DateTime.Now:T} ({lines.Count} exercise(s))";
+  }
+}

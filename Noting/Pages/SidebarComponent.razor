@@ -1,0 +1,75 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using MongoDB.Bson
+@using Noting.Models
+@using Noting.Services
+@using System.Security.Claims
+@inject WorkoutNoteService NoteService
+@inject AuthenticationStateProvider AuthStateProvider
+
+<nav>
+    <ul style="list-style:none; padding:0; margin:0 0 1rem 0;">
+        <li><NavLink href="/" Match="NavLinkMatch.All">Home</NavLink></li>
+
+        <li>
+            <button @onclick="ToggleSearch" style="background:none; border:none; padding:0; cursor:pointer;">
+                Search
+            </button>
+        </li>
+        <li><NavLink href="/graphs" Match="NavLinkMatch.Prefix">Graphs</NavLink></li>
+        <a href="/auth/logout">Logout</a>
+    </ul>
+</nav>
+
+
+@if (_isSearchVisible)
+{
+    <div>
+        <input placeholder="Type to search…" />
+    </div>
+}
+
+<h4>Your Notes</h4>
+
+@if (notes == null)
+{
+    <p>Loading…</p>
+}
+else if (!notes.Any())
+{
+    <p><em>No notes yet.</em></p>
+}
+else
+{
+    <ul style="list-style:none; padding:0;">
+        @foreach (var note in notes)
+        {
+            <li style="margin-bottom:0.5rem">
+                <a href="@($"/note/{note.NameTag}/{note.Date:yyyy-MM-dd}")">
+                    @note.NameTag (@note.Date.ToShortDateString())
+                </a>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+
+
+    private bool _isSearchVisible = false;
+    private List<WorkoutNote> notes;
+
+    private void ToggleSearch()
+    {
+        _isSearchVisible = !_isSearchVisible;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        var idStr = auth.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!ObjectId.TryParse(idStr, out var userId))
+            return;
+
+        notes = await NoteService.GetNotesForUserAsync(userId);
+    }
+}

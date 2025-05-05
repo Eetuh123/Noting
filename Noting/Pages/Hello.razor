@@ -4,6 +4,7 @@
 @using System.Security.Claims
 @using Noting.Models
 @using Noting.Services
+@layout MainLayout
 @inject ExerciseService ExerciseSvc
 @inject AuthenticationStateProvider AuthProv
 
@@ -13,9 +14,6 @@
                @bind="exercise.RawText"
                placeholder="e.g. 50kg bench 3x10" />
         <button @onclick="OnSubmit">Save</button>
-
-
-
     </Authorized>
     <NotAuthorized>
         <p>User is NOT authenticated in Blazor.</p>

@@ -50,7 +50,7 @@ namespace Noting.Controllers
 
             await SignInUserAsync(existingUser);
 
-            return RedirectToAction("Index", "Main");
+            return Redirect("/hello");
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -70,7 +70,7 @@ namespace Noting.Controllers
 
             await SignInUserAsync(user);
 
-            return RedirectToAction("Index", "Main");
+            return Redirect("/hello");
         }
         private async Task SignInUserAsync(User user)
         {

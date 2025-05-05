@@ -12,6 +12,8 @@ builder.Services.AddControllersWithViews();
 // — Razor Pages (needed to serve _Host.cshtml)
 builder.Services.AddRazorPages();
 
+
+
 // — Mongo init
 DatabaseManipulator.Initialize(builder.Configuration);
 
@@ -35,8 +37,10 @@ builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStat
 
 // — Your service
 builder.Services.AddScoped<ExerciseService>();
+builder.Services.AddScoped<WorkoutNoteService>();
 
 var app = builder.Build();
+
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
@@ -53,15 +57,6 @@ app.MapControllerRoute(
     name: "auth",
     pattern: "Auth/{action=Login}/{id?}",
     defaults: new { controller = "Auth" }
-);
-app.MapControllerRoute(
-    name: "main",
-    pattern: "Main/{action=Index}/{id?}",
-    defaults: new { controller = "Main", action = "Index" }
-);
-app.MapControllerRoute(
-    name: "api",
-    pattern: "api/{controller}/{action=Index}/{id?}"
 );
 
 // 3) Razor Pages (so _Host.cshtml can be served)
