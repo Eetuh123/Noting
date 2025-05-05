@@ -34,6 +34,14 @@ namespace Noting.Models
             return record;
 
         }
+        public static IMongoCollection<T> Collection<T>()where T : IMongoDocument
+        {
+            if (database == null)
+                throw new InvalidOperationException(
+                    "DatabaseManipulator not initialized. Call Initialize(config) first.");
+
+            return database.GetCollection<T>(typeof(T).Name);
+        }
         public interface IMongoDocument
         {
             ObjectId Id { get; set; }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using MongoDB.Bson;
+using MongoDB.Driver;
 using Noting.Models;
 using System.Globalization;
 using System.Numerics;
@@ -184,6 +185,18 @@ namespace Noting.Services
                 Reps = repsPerSet,
                 Notes = notes.Trim()
             };
+        }
+        public async Task<List<Exercise>> GetAllForCurrentUser(ClaimsPrincipal user)
+        {
+            var userIdString = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!ObjectId.TryParse(userIdString, out var userId))
+                return new List<Exercise>();
+
+            return await DatabaseManipulator
+                .Collection<Exercise>()
+                .Find(e => e.UserId == userId)
+                .SortByDescending(e => e.Date)
+                .ToListAsync();
         }
 
         private (int sets, int reps) DisambiguateTwoNumbers(int a, int b)
