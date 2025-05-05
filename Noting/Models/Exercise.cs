@@ -1,4 +1,5 @@
 ﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 using System.Security.Claims;
 using static Noting.Models.DatabaseManipulator;
 
@@ -6,6 +7,8 @@ namespace Noting.Models
 {
     public class Exercise : IMongoDocument
     {
+        [BsonId]
+        [BsonElement("_id")]
         public ObjectId Id { get; set; } = ObjectId.GenerateNewId();
         public ObjectId UserId { get; set; } = ObjectId.Empty;
         public required string NameTag { get; set; }

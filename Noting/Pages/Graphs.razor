@@ -1,0 +1,51 @@
+﻿@page "/graphs"
+@using Noting.Models
+@inject Noting.Services.ExerciseService ExerciseService
+@inject AuthenticationStateProvider AuthStateProv
+
+@if (rows == null)
+{
+    <p><em>Loading…</em></p>
+}
+else
+{
+    <table class="table">
+        <thead> … </thead>
+        <tbody>
+            @foreach (var row in rows)
+            {
+                <tr>
+                    <td>@row.NameTag</td>
+                    <td>@row.Weight kg</td>
+                    <td>@row.Reps reps</td>
+                    <td>@row.Volume kg</td>
+                    <td>@($"{row.OneRepMaxEstimate:F1} kg")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<ExerciseRow> rows = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthStateProv.GetAuthenticationStateAsync()).User;
+        var exercises = await ExerciseService.GetAllForCurrentUser(user);
+
+        rows = exercises
+          .Select(ex =>
+          {
+              var lastRep = ex.Reps.LastOrDefault()?.Reps ?? 0;
+
+              return new ExerciseRow
+                  {
+                      NameTag = ex.NameTag,
+                      Weight = ex.Weight,
+                      Reps = lastRep
+                  };
+          })
+          .ToList();
+    }
+}
