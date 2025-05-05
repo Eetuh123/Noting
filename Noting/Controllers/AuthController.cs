@@ -20,6 +20,10 @@ namespace Noting.Controllers
         {
             return View();
         }
+        public IActionResult Welcome()
+        {
+            return View();
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LoginUser(User user)

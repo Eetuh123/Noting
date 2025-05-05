@@ -1,0 +1,36 @@
+﻿@{
+    ViewData["Title"] = "Welcome";
+}
+
+<div class="flex h-screen">
+    <!-- Left Side -->
+    <div class="w-1/2 flex items-center justify-center">
+        <div class="text-left px-10">
+            <h1 class="text-5xl font-bold mb-4">NotingW</h1>
+            <p class="text-lg text-gray-600">Log in to continue noting your progress.</p>
+        </div>
+    </div>
+
+    <!-- Right Side -->
+    <div class="w-1/2 flex items-center justify-center">
+        <div class="w-full max-w-xs space-y-4 text-center">
+            <a href="/Auth/Login" class="block w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded">
+                Login
+            </a>
+
+            <a href="/Auth/Register" class="block w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded">
+                Register
+            </a>
+
+            <div class="flex items-center justify-center space-x-2 my-4">
+                <hr class="w-1/4 border-gray-300">
+                <span class="text-sm text-gray-500">or</span>
+                <hr class="w-1/4 border-gray-300">
+            </div>
+
+            <a href="/Auth/ExternalLogin?provider=Google" class="text-2xl font-semibold text-gray-800 hover:text-gray-900">
+                G
+            </a>
+        </div>
+    </div>
+</div>

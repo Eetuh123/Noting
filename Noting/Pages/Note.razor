@@ -1,4 +1,4 @@
-﻿@page "/note/{Tag}/{DateParam}"
+﻿@page "/note/{Id}"
 @using MongoDB.Bson
 @using Noting.Models
 @using Noting.Services
@@ -14,7 +14,9 @@
 }
 else
 {
-  <h3>@Tag (@Date.ToShortDateString())</h3>
+    <div class="border-b-1 border-divider mx-8 text-center font-semibold">
+  <h3 class="pb-4">@Tag</h3>
+    </div>
   <textarea
     @bind="NoteText"
     @onblur="SaveNote"
@@ -26,8 +28,9 @@ else
 
 @code {
   [Parameter] public string Tag { get; set; }
-  [Parameter] public string DateParam { get; set; }
+   [Parameter] public string Id { get; set; }
 
+  private WorkoutNote? CurrentNote;
   private ObjectId UserId;
   private DateTime Date;
   private string NoteText = "";
@@ -37,47 +40,40 @@ else
   protected override async Task OnInitializedAsync()
   {
 
-    var auth = await AuthStateProvider.GetAuthenticationStateAsync();
-    var idStr = auth.User.FindFirstValue(ClaimTypes.NameIdentifier);
-    if (!ObjectId.TryParse(idStr, out UserId))
-        throw new Exception("Invalid user");
+        if (!ObjectId.TryParse(Id, out var noteId))
+            throw new Exception("Invalid note ID");
 
-    if (!DateTime.TryParse(DateParam, out Date))
-        throw new Exception("Bad date");
+        CurrentNote = await NoteService.GetNoteByIdAsync(noteId);
+        if (CurrentNote == null)
+            throw new Exception("Note not found");
 
-    var existing = NoteService.GetNote(UserId, Tag, Date);
-    if (existing != null)
-      NoteText = existing.NoteText;
-
-    IsLoaded = true;
+        NoteText = CurrentNote.NoteText;
+        UserId = CurrentNote.UserId;
+        Date = CurrentNote.Date;
+        Tag = CurrentNote.NameTag;
+        IsLoaded = true;
   }
 
-  private async Task SaveNote()
-  {
-
-    var lines = NoteText
-      .Replace("\r\n", "\n")
-      .Replace("\r",   "\n")
-      .Split('\n')
-      .Select(l => l.Trim())
-      .Where(l => !string.IsNullOrEmpty(l))
-      .ToList();
-
-    foreach (var line in lines)
+    private async Task SaveNote()
     {
-      await ExerciseService.SaveFromText(line, UserId);
+        var lines = NoteText
+          .Replace("\r\n", "\n")
+          .Replace("\r", "\n")
+          .Split('\n')
+          .Select(l => l.Trim())
+          .Where(l => !string.IsNullOrEmpty(l))
+          .ToList();
+
+        foreach (var line in lines)
+        {
+            await ExerciseService.SaveFromText(line, UserId);
+        }
+
+        CurrentNote.NoteText = NoteText;
+        CurrentNote.Exercises = new List<Exercise>();
+
+        NoteService.SaveNote(CurrentNote);
+
+        SaveStatus = $"Saved at {DateTime.Now:T} ({lines.Count} exercise(s))";
     }
-
-    var note = new WorkoutNote {
-      Id       = ObjectId.GenerateNewId(),
-      UserId   = UserId,
-      NameTag  = Tag,
-      Date     = Date,
-      NoteText = NoteText,
-      Exercises= new List<Exercise>()
-    };
-    NoteService.SaveNote(note);
-
-    SaveStatus = $"Saved at {DateTime.Now:T} ({lines.Count} exercise(s))";
-  }
 }
