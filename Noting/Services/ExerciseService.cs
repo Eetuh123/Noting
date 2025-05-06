@@ -20,7 +20,7 @@ namespace Noting.Services
             _tokenizer = RegexPatterns.LoadLookup("lexerPatterns.json")["Tokenize"];
         }
         [Authorize]
-        public async Task<Exercise> SaveFromText(string rawText, ObjectId userId)
+        public async Task<Exercise> SaveFromText(string rawText, ObjectId userId, DateTimeOffset noteDate, ObjectId? id = null)
         {
 
             var cleanText = rawText.ToLowerInvariant();
@@ -43,8 +43,9 @@ namespace Noting.Services
 
             var exercise = new Exercise
             {
+                Id = id ?? ObjectId.GenerateNewId(),
                 RawText = rawText.Trim(),
-                Date = DateTime.UtcNow,
+                Date = noteDate,
                 UserId = userId,
                 NameTag = parsed.Name,
                 Weight = parsed.Weight,

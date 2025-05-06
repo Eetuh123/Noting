@@ -18,6 +18,14 @@
                @onblur="SaveTag" />
     </div>
 
+    <div class="mx-8 my-2">
+        <label>Edit date/time:</label>
+        <input type="datetime-local"
+               @bind="NoteDate"
+               @bind:event="oninput"
+               @onchange="SaveDate" />
+    </div>
+
     <textarea
         @bind="NoteText"
         @bind:event="oninput"
@@ -36,6 +44,8 @@
     private bool IsLoaded = false;
     private string SaveStatus = "";
 
+    private DateTime NoteDate;
+
     protected override async Task OnParametersSetAsync()
     {
         IsLoaded = false;
@@ -48,10 +58,19 @@
         if (CurrentNote == null)
             throw new Exception("Note not found");
 
-        Tag = CurrentNote.NameTag;
+        NoteDate = CurrentNote.Date.LocalDateTime;
+        Tag      = CurrentNote.NameTag;
         NoteText = CurrentNote.NoteText;
-        UserId = CurrentNote.UserId;
+        UserId   = CurrentNote.UserId;
         IsLoaded = true;
+    }
+
+    private async Task SaveDate()
+    {
+        CurrentNote.Date = new DateTimeOffset(NoteDate, DateTimeOffset.Now.Offset);
+        NoteService.SaveNote(CurrentNote);
+        SaveStatus = $"Date saved at {DateTime.Now:T}";
+        AppState.RaiseNotesChanged();
     }
 
     private async Task SaveTag()
@@ -68,7 +87,7 @@
     private async Task SaveNote()
     {
         var iso = await JS.InvokeAsync<string>("getClientTime");
-        CurrentNote.Date = DateTimeOffset.Parse(iso);
+
         CurrentNote.NoteText = NoteText;
 
         var lines = NoteText
@@ -79,20 +98,23 @@
           .Where(l => l.Length > 0)
           .ToList();
 
-        var ids = new List<ObjectId>();
+        var oldIds = CurrentNote.ExerciseIds;
+        var newIds = new List<ObjectId>();
 
-        foreach (var line in lines)
+        for (int i = 0; i < lines.Count; i++)
         {
-            var existing = await ExerciseService.GetByTextAndUserAsync(line, UserId);
-            if (existing != null)
-                ids.Add(existing.Id);
-            else
-                ids.Add((await ExerciseService.SaveFromText(line, UserId)).Id);
+            ObjectId? id = i < oldIds.Count ? oldIds[i] : (ObjectId?)null;
+            var ex = await ExerciseService.SaveFromText(
+                lines[i],
+                UserId,
+                CurrentNote.Date,
+                id);
+            newIds.Add(ex.Id);
         }
 
-        CurrentNote.ExerciseIds = ids;
+        CurrentNote.ExerciseIds = newIds;
         NoteService.SaveNote(CurrentNote);
 
-        SaveStatus = $"Saved at {DateTime.Now:T} ({ids.Count} exercises)";
+        SaveStatus = $"Saved at {DateTime.Now:T} ({lines.Count} exercises)";
     }
 }

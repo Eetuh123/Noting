@@ -39,14 +39,6 @@
         var authState = await AuthProv.GetAuthenticationStateAsync();
         var idClaim = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        if (!ObjectId.TryParse(idClaim, out var userId))
-        {
-
-            return;
-        }
-
-        await ExerciseSvc.SaveFromText(exercise.RawText, userId);
-
         exercise.RawText = "";
     }
 }

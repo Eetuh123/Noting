@@ -1,3 +1,4 @@
+using ApexCharts;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
@@ -11,8 +12,6 @@ builder.Services.AddControllersWithViews();
 
 // — Razor Pages (needed to serve _Host.cshtml)
 builder.Services.AddRazorPages();
-
-
 
 // — Mongo init
 DatabaseManipulator.Initialize(builder.Configuration);
@@ -39,6 +38,8 @@ builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStat
 builder.Services.AddScoped<ExerciseService>();
 builder.Services.AddScoped<WorkoutNoteService>();
 builder.Services.AddScoped<AppState>();
+
+builder.Services.AddApexCharts();
 
 var app = builder.Build();
 

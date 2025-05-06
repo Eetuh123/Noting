@@ -16,7 +16,7 @@ namespace Noting.Models
         public List<RepEntry> Reps { get; set; } = new();
         public string Notes { get; set; } = string.Empty;
 
-        public required DateTime Date { get; set; }
+        public required DateTimeOffset Date { get; set; }
         public required string RawText { get; set; }
 
         public bool TrySetCurrentUserId(ClaimsPrincipal user)

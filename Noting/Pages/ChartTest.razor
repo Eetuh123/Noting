@@ -1,0 +1,76 @@
+﻿@page "/test"
+
+<h3>ChartTest</h3>
+
+<ApexChart TItem="Order"
+           Title="Order Net Value"
+           Options=options>
+
+    <ApexPointSeries TItem="Order"
+                     Items="Orders"
+                     Name="Value"
+                     XValue="@(e => e.Country)"
+                     YAggregate="@(e => e.Sum(e => e.GrossValue))"
+                     SeriesType="SeriesType.Bar" />
+
+    <ApexPointSeries TItem="Order"
+                     Items="Orders"
+                     Name="NetValue"
+                     XValue="@(e => e.Country)"
+                     YAggregate="@(e => e.Sum(e => e.NetValue))"
+                     SeriesType="SeriesType.Bar" />
+
+    <ApexPointSeries TItem="Order"
+                     Items="Orders"
+                     Name="Discount"
+                     XValue="@(e => e.Country)"
+                     YAggregate="@(e => e.Average(e => e.DiscountPercentage))"
+                     SeriesType="SeriesType.Line" />
+</ApexChart>
+
+@code {
+
+    private class Order
+    {
+        public string Country { get; set; }
+        public decimal GrossValue { get; set; }
+        public decimal NetValue { get; set; }
+        public decimal DiscountPercentage { get; set; }
+    }
+
+    private List<Order> Orders { get; set; } = new List<Order>
+    {
+        new() { Country = "USA",     GrossValue = 120000, NetValue =  90000, DiscountPercentage = 25 },
+        new() { Country = "Canada",  GrossValue =  80000, NetValue =  68000, DiscountPercentage = 15 },
+        new() { Country = "UK",      GrossValue = 100000, NetValue =  85000, DiscountPercentage = 15 },
+        new() { Country = "Germany", GrossValue =  95000, NetValue =  76000, DiscountPercentage = 20 },
+
+    };
+
+    private ApexChartOptions<Order> options { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        options.Yaxis = new List<YAxis>();
+
+        options.Yaxis.Add(new YAxis
+            {
+                Title = new AxisTitle { Text = "Weight" },
+                SeriesName = "Value",
+                DecimalsInFloat = 0
+            });
+        options.Yaxis.Add(new YAxis
+            {
+                Show = false,
+                SeriesName = "NetValue",
+                DecimalsInFloat = 0
+            });
+        options.Yaxis.Add(new YAxis
+            {
+                Title = new AxisTitle { Text = "Reps" },
+                SeriesName = "Discount",
+                DecimalsInFloat = 0,
+                Opposite = true
+            });
+    }
+}
