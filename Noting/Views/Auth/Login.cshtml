@@ -5,10 +5,10 @@
 
 <div class="flex h-screen">
     <!-- Left Section -->
-    <div class="w-1/2 flex items-center justify-center">
-        <div class="text-center px-10">
-            <h1 class="text-4xl underline font-bold mb-4">Welcome Back</h1>
-            <p class="text-lg text-gray-600">Log in to continue noting your progress.</p>
+    <div class="w-1/2 flex items-center justify-center text-surface-dark">
+        <div class="text-left px-40">
+            <h1 class="text-4xl font-bold mb-4">Welcome Back</h1>
+            <p class="text-3xl">Log in to continue noting your progress.</p>
         </div>
     </div>
 
@@ -19,17 +19,17 @@
 
             @Html.TextBoxFor(u => u.Email, new
                 {
-                    @class = "w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500",
+                    @class = "w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-highlight",
                     placeholder = "Email"
                 })
 
             @Html.PasswordFor(u => u.PasswordHash, new
                 {
-                    @class = "w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500",
+                    @class = "w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-highlight",
                     placeholder = "Password"
                 })
 
-            <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded">
+            <button type="submit" class="w-full bg-highlight duration-300 border-2 border-surface-main hover:cursor-pointer hover:border-2 hover:border-highlight hover:text-highlight hover:bg-surface-main text-white font-semibold py-2 rounded">
                 Login
             </button>
         </form>
