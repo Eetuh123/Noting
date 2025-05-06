@@ -74,111 +74,149 @@ namespace Noting.Services
             string exerciseName = "";
             string notes = "";
             int? weight = null;
-            List<int> repsPerSet = new();
+            var repsPerSet = new List<int>();
+            var pendingNumbers = new List<int>();
+            bool isNameBuilding = true;
 
-            var pendingNumbers = new Queue<int>();
-            bool nameOpen = true;
-            bool isExpectingReps = false;
+            const int MaxRep = 30;
+            const int OutlierThreshold = 10;
 
-            foreach (var token in tokens)
+            for (int i = 0; i < tokens.Count; i++)
             {
+                var token = tokens[i];
+
+                // Try to create number chain as long as there are numbers and separators
+                if (token.Type == "Number"
+                    && i + 2 < tokens.Count
+                    && tokens[i + 1].Type == "Separator")
+                {
+                    var repNumbers = new List<int>();
+                    int j = i;
+                    // Chain Creation code
+                    while (true)
+                    {
+                        if (tokens[j].Type != "Number"
+                            || !int.TryParse(tokens[j].Value, out var n))
+                            break;
+                        repNumbers.Add(n);
+
+                        if (j + 2 < tokens.Count
+                            && tokens[j + 1].Type == "Separator"
+                            && tokens[j + 2].Type == "Number")
+                        {
+                            j += 2;
+                            continue;
+                        }
+                        break;
+                    }
+                    // Stuff for Chain that is +2 size
+                    if (repNumbers.Count >= 2)
+                    {
+                        // pop the last pending number as weight
+                        if (weight == null && pendingNumbers.Count > 0)
+                        {
+                            weight = pendingNumbers.Last();
+                            pendingNumbers.RemoveAt(pendingNumbers.Count - 1);
+                        }
+
+                        // build repsPerSet
+                        if (repNumbers.All(x => x == repNumbers[0]))
+                        {
+                            repsPerSet = Enumerable.Repeat(repNumbers[0], repNumbers.Count).ToList();
+                        }
+                        else if (repNumbers.Count == 2)
+                        {
+                            var (sets, r) = DisambiguateTwoNumbers(repNumbers[0], repNumbers[1]);
+                            repsPerSet = Enumerable.Repeat(r, sets).ToList();
+                        } 
+                        else
+                        {
+                            repsPerSet = repNumbers.ToList();
+                        }
+
+                        i = j;  // skip past the chain
+                        continue;
+                    }
+                }
+
                 switch (token.Type)
                 {
-                    case "Number":
-                        if (int.TryParse(token.Value, out var num))
+                    case "Word":
+                        if (isNameBuilding)
                         {
-                            if (nameOpen && exerciseName.Length > 0)
-                                    nameOpen = false;
-                            pendingNumbers.Enqueue(num);
+                            // flush any queued numbers as reps—but only if the name has already started
+                            if (exerciseName.Length > 0 && pendingNumbers.Count >= 2)
+                            {
+                                repsPerSet.AddRange(pendingNumbers);
+                                pendingNumbers.Clear();
+                            }
+                            exerciseName += (exerciseName.Length > 0 ? " " : "") + token.Value;
                         }
                         else
-                            notes += " " + token.Value;
+                        {
+                            notes += (notes.Length > 0 ? " " : "") + token.Value;
+                        }
+                        break;
+
+                    case "Number":
+                        if (exerciseName.Length > 0)
+                            isNameBuilding = false;
+                        if (int.TryParse(token.Value, out var num))
+                            pendingNumbers.Add(num);
                         break;
 
                     case "Unit":
+                        if (exerciseName.Length > 0)
+                            isNameBuilding = false;
+                        // pop the most recent number as weight
                         if (pendingNumbers.Count > 0)
                         {
-                            weight = pendingNumbers.Dequeue();
-                            pendingNumbers.Clear();
-                        }
-                        else
-                        {
-
-                            notes += " " + token.Value;
+                            weight = pendingNumbers.Last();
+                            pendingNumbers.RemoveAt(pendingNumbers.Count - 1);
                         }
                         break;
 
                     case "Separator":
-                        isExpectingReps = true;
-                        nameOpen = false;
-                        break;
-
-                    case "Word":
-                        if (nameOpen)
-                            exerciseName += (exerciseName.Length > 0 ? " " : "") + token.Value;
-                        else
-                            notes += " " + token.Value;
+                        if (exerciseName.Length > 0)
+                            isNameBuilding = false;
                         break;
 
                     default:
-                        notes += " " + token.Value;
+                        notes += (notes.Length > 0 ? " " : "") + token.Value;
                         break;
                 }
-
-                if (isExpectingReps && pendingNumbers.Count >= 2)
-                {
-                    var a = pendingNumbers.Dequeue();
-                    var b = pendingNumbers.Dequeue();
-                    (int sets, int reps) = DisambiguateTwoNumbers(a, b);
-                    repsPerSet = Enumerable.Repeat(reps, sets).ToList();
-                    isExpectingReps = false;
-                    nameOpen = false;
-                }
             }
 
-            if (repsPerSet.Count == 0
-                && pendingNumbers.Count >= 2
-                && pendingNumbers.All(n => n == pendingNumbers.Peek()))
-            {
-
-                int repsValue = pendingNumbers.Dequeue();
-                int setsCount = 1 + pendingNumbers.Count;
-                repsPerSet = Enumerable.Repeat(repsValue, setsCount).ToList();
-                pendingNumbers.Clear();
-            }
-
+            // Guessing the imposter with avarages
             if (repsPerSet.Count == 0 && pendingNumbers.Count > 0)
             {
-                var candidateNumbers = pendingNumbers.ToList();
-                const int minRep = 1;
-                const int maxRep = 25;
+                var leftovers = pendingNumbers;
 
-                if (candidateNumbers.Count == 1)
+                if (leftovers.Count == 1)
                 {
-                    if (candidateNumbers[0] <= maxRep)
-                        repsPerSet = new List<int> { candidateNumbers[0] };
+                    var x = leftovers[0];
+                    if (x <= MaxRep)
+                        repsPerSet.Add(x);
                     else
-                        weight = candidateNumbers[0];
+                        weight = x;
                 }
-
                 else
                 {
-                    var reps = candidateNumbers.Where(n => n >= minRep && n <= maxRep).ToList();
-                    var heavy = candidateNumbers.FirstOrDefault(n => n > maxRep);
+                    int mn = leftovers.Min();
+                    int mx = leftovers.Max();
 
-                    if (reps.Count > 0)
-                        repsPerSet = reps;
-
-                    if (weight == null && heavy > 0)
-                        weight = heavy;
+                    if (weight == null && mx - mn > OutlierThreshold)
+                    {
+                        // outlier = weight, rest = reps
+                        weight = mx;
+                        repsPerSet = leftovers.Where(n => n != mx).ToList();
+                    }
+                    else
+                    {
+                        // no outlier = all leftovers are reps
+                        repsPerSet = new List<int>(leftovers);
+                    }
                 }
-
-                pendingNumbers.Clear();
-            }
-
-            if (repsPerSet.Count == 0 && pendingNumbers.Count >= 1)
-            {
-                weight = pendingNumbers.Dequeue();
             }
 
             return new ParsedExercise
@@ -189,6 +227,8 @@ namespace Noting.Services
                 Notes = notes.Trim()
             };
         }
+
+
         public async Task<List<Exercise>> GetAllForCurrentUser(ClaimsPrincipal user)
         {
             var userIdString = user.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -201,7 +241,7 @@ namespace Noting.Services
                 .SortByDescending(e => e.Date)
                 .ToListAsync();
         }
-
+        // Comparing 2 diffrent values which one meets the condition
         private (int sets, int reps) DisambiguateTwoNumbers(int a, int b)
         {
             const int maxSets = 6;
