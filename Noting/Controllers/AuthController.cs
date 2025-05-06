@@ -5,13 +5,26 @@ using Noting.Models;
 using MongoDB.Driver;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Noting.Services;
+using MongoDB.Bson;
 
 namespace Noting.Controllers
 {
     public class AuthController : Controller
     {
+        private readonly WorkoutNoteService _noteService;
         private readonly ILogger<AuthController> ?_logger;
         private readonly PasswordHasher<User> _passwordHasher = new();
+
+        public AuthController(
+            WorkoutNoteService noteService,
+            ILogger<AuthController> logger)
+        {
+            _noteService = noteService;
+            _logger = logger;
+            _passwordHasher = new PasswordHasher<User>();
+        }
+
         public IActionResult Register()
         {
             return View();
@@ -54,7 +67,23 @@ namespace Noting.Controllers
 
             await SignInUserAsync(existingUser);
 
-            return Redirect("/hello");
+            var latest = (await _noteService.GetNotesForUserAsync(existingUser.Id))
+                 .OrderByDescending(n => n.Date)
+                 .FirstOrDefault();
+
+            if (latest == null)
+            {
+                latest = new WorkoutNote
+                {
+                    UserId = existingUser.Id,
+                    Date = DateTimeOffset.UtcNow,
+                    NameTag = "New Note",
+                    NoteText = "",
+                    ExerciseIds = new List<ObjectId>()
+                };
+                latest = _noteService.SaveNote(latest);
+            }
+            return Redirect($"/note/{latest.Id}");
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -64,7 +93,7 @@ namespace Noting.Controllers
                 .GetCollection<User>("User");
 
             if (collection.Find(u => u.Email == user.Email).FirstOrDefault() != null)
-            { 
+            {
                 ModelState.AddModelError("Email", "Email already exists");
                 return View("Login");
             }
@@ -74,7 +103,17 @@ namespace Noting.Controllers
 
             await SignInUserAsync(user);
 
-            return Redirect("/hello");
+            var note = new WorkoutNote
+            {
+                UserId = user.Id,
+                Date = DateTimeOffset.UtcNow,
+                NameTag = "New Note",
+                NoteText = "",
+                ExerciseIds = new List<ObjectId>()
+            };
+            note = _noteService.SaveNote(note);
+
+            return Redirect($"/note/{note.Id}");
         }
         private async Task SignInUserAsync(User user)
         {
