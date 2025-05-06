@@ -1,15 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Noting.Models;
-using System.Globalization;
-using System.Numerics;
 using System.Security.Claims;
-using System.Text.Json;
 using System.Text.RegularExpressions;
-using static System.Net.Mime.MediaTypeNames;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Noting.Services
 {
@@ -68,6 +62,25 @@ namespace Noting.Services
               );
 
             return exercise;
+        }
+        public async Task<List<Exercise>> GetAllForCurrentUser(ClaimsPrincipal user)
+        {
+            var userIdString = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!ObjectId.TryParse(userIdString, out var userId))
+                return new List<Exercise>();
+
+            return await DatabaseManipulator
+                .Collection<Exercise>()
+                .Find(e => e.UserId == userId)
+                .SortByDescending(e => e.Date)
+                .ToListAsync();
+        }
+        public async Task<Exercise?> GetByTextAndUserAsync(string text, ObjectId userId)
+        {
+            return await DatabaseManipulator
+                .Collection<Exercise>()
+                .Find(e => e.UserId == userId && e.RawText == text)
+                .FirstOrDefaultAsync();
         }
         public ParsedExercise ParseTokens(List<Token> tokens)
         {
@@ -228,19 +241,6 @@ namespace Noting.Services
             };
         }
 
-
-        public async Task<List<Exercise>> GetAllForCurrentUser(ClaimsPrincipal user)
-        {
-            var userIdString = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!ObjectId.TryParse(userIdString, out var userId))
-                return new List<Exercise>();
-
-            return await DatabaseManipulator
-                .Collection<Exercise>()
-                .Find(e => e.UserId == userId)
-                .SortByDescending(e => e.Date)
-                .ToListAsync();
-        }
         // Comparing 2 diffrent values which one meets the condition
         private (int sets, int reps) DisambiguateTwoNumbers(int a, int b)
         {

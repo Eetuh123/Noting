@@ -14,7 +14,7 @@ namespace Noting.Models
         public ObjectId UserId { get; set; }
 
         public string NameTag { get; set; } = "";
-        public DateTime Date { get; set; }
+        public DateTimeOffset Date { get; set; }
 
         public string NoteText { get; set; } = "";
 

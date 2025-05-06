@@ -7,6 +7,8 @@
 @inject WorkoutNoteService NoteService
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager NavManager
+@inject IJSRuntime JS
+@inject AppState AppState
 
 <nav class="mb-4 border-b-1">
     <ul class="flex space-x-4">
@@ -21,7 +23,6 @@
 @if (_isSearchVisible)
 {
     <div class="fixed inset-0" @onclick="ToggleSearch"></div>
-
     <div class="absolute inset-0 m-auto h-fit z-20" @onclick:stopPropagation>
         <div class="max-w-xl mx-auto">
             <SearchBar OnSearchChanged="ApplyFilters" />
@@ -53,7 +54,7 @@
 
                         <li class="py-2 hover:bg-gray-50 rounded transition-colors">
                             <a class="@linkClass" href="@url">
-                                @note.NameTag (@note.Date.ToShortDateString())
+                                @note.NameTag @note.Date.Date.ToString("dd.MM.yyyy")
                             </a>
                         </li>
                     }
@@ -65,34 +66,47 @@
 
 @code {
     private bool _isSearchVisible;
+    private ObjectId _userId;
     private List<WorkoutNote> _allNotes = new();
     private List<Section> Sections = new();
-    private ObjectId _userId;
 
     protected override async Task OnInitializedAsync()
     {
         NavManager.LocationChanged += HandleLocationChanged;
+        AppState.NotesChanged += OnNotesChanged;
+        await LoadNotes();
+    }
 
+    private async void OnNotesChanged()
+    {
+        await InvokeAsync(async () =>
+        {
+            await LoadNotes();
+            StateHasChanged();
+        });
+    }
+
+    private async Task LoadNotes()
+    {
         var auth = await AuthStateProvider.GetAuthenticationStateAsync();
         var idStr = auth.User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!ObjectId.TryParse(idStr, out var userId))
             return;
         _userId = userId;
 
-        var notes = await NoteService.GetNotesForUserAsync(userId);
-        if (notes != null && notes.Any())
-        {
-            _allNotes = notes;
-            Sections = BuildSections(_allNotes);
-        }
+        _allNotes = await NoteService.GetNotesForUserAsync(_userId);
+        Sections = BuildSections(_allNotes);
     }
-    private void CreateNewNote()
+
+    private async Task CreateNewNote()
     {
+        var iso = await JS.InvokeAsync<string>("getClientTime");
+        var client = DateTimeOffset.Parse(iso);
 
         var note = new WorkoutNote
             {
                 UserId = _userId,
-                Date = DateTime.Today,
+                Date = client,
                 NameTag = "New Note",
                 NoteText = "",
                 Exercises = new List<Exercise>()
@@ -100,7 +114,7 @@
 
         note = NoteService.SaveNote(note);
 
-        _allNotes.Insert(0, note);
+        _allNotes = await NoteService.GetNotesForUserAsync(_userId);
         Sections = BuildSections(_allNotes);
 
         NavManager.NavigateTo($"/note/{note.Id}");
@@ -110,7 +124,6 @@
     {
         var q = _allNotes.AsEnumerable();
 
-        // split out anything parsable as a date
         var dateTokens = terms
           .Select(t => (raw: t, ok: DateTime.TryParse(t, out var dt) ? (DateTime?)dt.Date : null))
           .Where(x => x.ok.HasValue)
@@ -120,11 +133,10 @@
         foreach (var dt in dateTokens)
             q = q.Where(n => n.Date.Date == dt);
 
-        // all the rest as name substrings
+        // name tokens
         var nameTokens = terms.Except(dateTokens.Select(d => d.ToShortDateString()));
         foreach (var nt in nameTokens)
-            q = q.Where(n =>
-              n.NameTag.Contains(nt, StringComparison.OrdinalIgnoreCase));
+            q = q.Where(n => n.NameTag.Contains(nt, StringComparison.OrdinalIgnoreCase));
 
         Sections = BuildSections(q.ToList());
         StateHasChanged();
@@ -133,12 +145,12 @@
     private List<Section> BuildSections(List<WorkoutNote> notes)
     {
         var sections = new List<Section>();
-        var today = DateTime.Today;
+        var today = DateTimeOffset.Now.Date;
 
         // Today
         var todayNotes = notes
           .Where(n => n.Date.Date == today)
-          .OrderByDescending(n => n.Date)
+          .OrderBy(n => n.Date)
           .ToList();
         if (todayNotes.Any())
             sections.Add(new Section { Title = "Today", Notes = todayNotes });
@@ -146,23 +158,22 @@
         // Past 30 days
         var past30 = notes
           .Where(n => n.Date.Date >= today.AddDays(-30) && n.Date.Date < today)
-          .OrderByDescending(n => n.Date)
+          .OrderBy(n => n.Date)
           .ToList();
         if (past30.Any())
             sections.Add(new Section { Title = "Past 30 days", Notes = past30 });
 
-        // Older, by month/year
+        // Older, grouped by month/year
         var earlier = notes
           .Where(n => n.Date.Date < today.AddDays(-30))
           .GroupBy(n => n.Date.ToString("MMMM yyyy"))
-          .OrderByDescending(g =>
-            DateTime.ParseExact(g.Key, "MMMM yyyy", null));
+          .OrderBy(g => DateTimeOffset.ParseExact(g.Key, "MMMM yyyy", null));
         foreach (var grp in earlier)
         {
             sections.Add(new Section
                 {
                     Title = grp.Key,
-                    Notes = grp.OrderByDescending(n => n.Date).ToList()
+                    Notes = grp.OrderBy(n => n.Date).ToList()
                 });
         }
 
@@ -170,14 +181,19 @@
     }
 
     private void ToggleSearch() => _isSearchVisible = !_isSearchVisible;
-    private void HandleLocationChanged(object? s, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+
+    private void HandleLocationChanged(object? _, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs __)
       => StateHasChanged();
 
-    public void Dispose() => NavManager.LocationChanged -= HandleLocationChanged;
+    public void Dispose()
+    {
+        NavManager.LocationChanged -= HandleLocationChanged;
+        AppState.NotesChanged -= OnNotesChanged;
+    }
 
     private class Section
     {
-        public string Title { get; set; }
-        public List<WorkoutNote> Notes { get; set; }
+        public string Title { get; set; } = default!;
+        public List<WorkoutNote> Notes { get; set; } = new();
     }
 }

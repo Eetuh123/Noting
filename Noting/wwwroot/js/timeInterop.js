@@ -1,0 +1,1 @@
+﻿window.getClientTime = () => new Date().toISOString();

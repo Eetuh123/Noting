@@ -38,6 +38,7 @@ builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStat
 // — Your service
 builder.Services.AddScoped<ExerciseService>();
 builder.Services.AddScoped<WorkoutNoteService>();
+builder.Services.AddScoped<AppState>();
 
 var app = builder.Build();
 

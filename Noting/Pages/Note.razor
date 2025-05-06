@@ -7,13 +7,10 @@
 @inject ExerciseService ExerciseService
 @using System.Security.Claims
 @layout MainLayout
+@inject IJSRuntime JS
+@inject AppState AppState
 
-@if (!IsLoaded)
-{
-    <p>Loading…</p>
-}
-else
-{
+
     <div class="border-b-1 border-divider mx-8 text-center font-semibold">
         <input class="text-xl font-semibold focus:outline-none"
                @bind="Tag"
@@ -21,12 +18,13 @@ else
                @onblur="SaveTag" />
     </div>
 
-    <textarea @bind="NoteText"
-              @onblur="SaveNote"
-              style="width:100%; height:80vh">
-      </textarea>
+    <textarea
+        @bind="NoteText"
+        @bind:event="oninput"
+        @onblur="SaveNote"
+        style="width:100%; height:80vh">
+    </textarea>
     <p>@SaveStatus</p>
-}
 
 @code {
     [Parameter] public string Id { get; set; }
@@ -38,8 +36,11 @@ else
     private bool IsLoaded = false;
     private string SaveStatus = "";
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
+        IsLoaded = false;
+        SaveStatus = "";
+
         if (!ObjectId.TryParse(Id, out var noteId))
             throw new Exception("Invalid note ID");
 
@@ -60,12 +61,16 @@ else
             CurrentNote.NameTag = Tag;
             NoteService.SaveNote(CurrentNote);
             SaveStatus = $"Tag saved at {DateTime.Now:T}";
-            StateHasChanged();
+            AppState.RaiseNotesChanged();
         }
     }
 
     private async Task SaveNote()
     {
+        var iso = await JS.InvokeAsync<string>("getClientTime");
+        CurrentNote.Date = DateTimeOffset.Parse(iso);
+        CurrentNote.NoteText = NoteText;
+
         var lines = NoteText
           .Replace("\r\n", "\n")
           .Replace("\r", "\n")
@@ -78,8 +83,11 @@ else
 
         foreach (var line in lines)
         {
-            var ex = await ExerciseService.SaveFromText(line, UserId);
-            ids.Add(ex.Id);
+            var existing = await ExerciseService.GetByTextAndUserAsync(line, UserId);
+            if (existing != null)
+                ids.Add(existing.Id);
+            else
+                ids.Add((await ExerciseService.SaveFromText(line, UserId)).Id);
         }
 
         CurrentNote.ExerciseIds = ids;
