@@ -10,7 +10,7 @@
 @inject IJSRuntime JS
 @inject AppState AppState
 @inject NavigationManager NavManager
-
+@using Microsoft.AspNetCore.Components.Routing
 
 @if (!IsLoaded)
 {
@@ -139,7 +139,6 @@ else
             NavManager.NavigateTo("/");
         }
     }
-
     private async Task SaveDate()
     {
         CurrentNote.Date = new DateTimeOffset(NoteDate, DateTimeOffset.Now.Offset);
