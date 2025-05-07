@@ -1,13 +1,23 @@
 ﻿@inherits LayoutComponentBase
+@inject AuthenticationStateProvider AuthProv
+@using System.Security.Claims
 
-<div class="flex h-screen text-surface-dark">
-    <!-- Sidebar -->
-    <div class="w-1/5 bg-surface-main border-outline border-r-2 shadow-lg border-divider p-2 flex flex-col items-center space-y-6 text-xl">
-        <SidebarComponent />
-    </div>
 
-    <!-- Main content area -->
-    <div class="flex-1 p-4 overflow-auto">
-        @Body
-    </div>
-</div>
+<AuthorizeView Context="auth">
+    <Authorized>
+        <div class="flex h-screen text-surface-dark">
+            <!-- Sidebar -->
+            <div class="w-1/5 bg-surface-main border-outline border-r-2 shadow-lg border-divider p-2 flex flex-col items-center space-y-6 text-xl">
+                <SidebarComponent />
+            </div>
+
+            <!-- Main content area -->
+            <div class="flex-1 p-4 overflow-auto">
+                @Body
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <p>User is NOT authenticated in Blazor.</p>
+    </NotAuthorized>
+</AuthorizeView>

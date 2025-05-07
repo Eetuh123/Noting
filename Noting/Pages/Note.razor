@@ -11,29 +11,36 @@
 @inject AppState AppState
 
 
-    <div class="border-b-2 border-divider mx-8 text-center font-semibold">
-        <input class="text-xl font-semibold focus:outline-none pb-4"
+    <div class="border-b-2 alig border-divider mx-8 text-center font-semibold">
+    <input class="text-center text-2xl font-semibold focus:outline-none pb-4"
                @bind="Tag"
                @bind:event="oninput"
                @onblur="SaveTag" />
     </div>
+    <div class="mx-8 my-2 relative">
+    <textarea @bind="NoteText"
+              @bind:event="oninput"
+              @onblur="SaveNote"
+              class="w-full h-[80vh] p-4
+           bg-white border border-gray-200 rounded-lg
+           shadow-sm placeholder-gray-400 font-raleway text-lg
+           focus:outline-none focus:ring-1 focus:ring-red-500
+           focus:border-highlight resize-none">
+  </textarea>
 
-    <div class="mx-8 my-2">
-        <label>Edit date/time:</label>
-        <input type="datetime-local"
+    <div class="absolute bottom-2 right-2 z-10
+              bg-white p-2 rounded-lg shadow-md flex items-center space-x-1">
+        <label for="editDate" class="text-gray-600 text-sm">Date:</label>
+        <input id="editDate"
+               type="datetime-local"
                @bind="NoteDate"
                @bind:event="oninput"
-               @onchange="SaveDate" />
+               @onchange="SaveDate"
+               class="text-sm focus:outline-none" />
     </div>
+</div>
 
-    <textarea
-        @bind="NoteText"
-        @bind:event="oninput"
-        @onblur="SaveNote"
-          class="w-full h-[80vh] p-4 bg-white border border-gray-200 rounded-lg shadow-sm placeholder-gray-400 font-regular text-lg font-raleway
-         focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-highlight resize-none">
-    </textarea>
-    <p>@SaveStatus</p>
+<p class="mx-8 text-sm text-gray-500">@SaveStatus</p>
 
 @code {
     [Parameter] public string Id { get; set; }
@@ -104,7 +111,7 @@
 
         for (int i = 0; i < lines.Count; i++)
         {
-            ObjectId? id = i < oldIds.Count ? oldIds[i] : (ObjectId?)null;
+            ObjectId? id = i < oldIds.Count ? oldIds[i] : (ObjectId?) null;
             var ex = await ExerciseService.SaveFromText(
                 lines[i],
                 UserId,

@@ -1,0 +1,95 @@
+﻿@page "/bench"
+@using System.Linq
+@using ApexCharts
+
+<h3>Bench Progression</h3>
+
+<ApexChart TItem="BenchSet"
+           Title="Bench Progression"
+           Options="chartOptions"
+           Height="350">
+
+    <!-- Weight bars -->
+    <ApexPointSeries TItem="BenchSet"
+                     Items="BenchData"
+                     Name="Weight"
+                     XValue="e => e.WeekLabel"
+                     YValue="e => e.WeightKg"
+                     SeriesType="SeriesType.Bar" />
+
+    <!-- Reps line -->
+    <ApexPointSeries TItem="BenchSet"
+                     Items="BenchData"
+                     Name="Reps"
+                     XValue="e => e.WeekLabel"
+                     YValue="e => e.Reps"
+                     SeriesType="SeriesType.Line" />
+
+</ApexChart>
+
+@code {
+
+    public class BenchSet
+    {
+        public int Week { get; set; }
+        public string WeekLabel => $"{Week} W";
+        public int WeightKg { get; set; }
+        public int Reps { get; set; }
+    }
+
+    private List<BenchSet> BenchData { get; set; }
+    private ApexChartOptions<BenchSet> chartOptions { get; set; }
+
+    protected override void OnInitialized()
+    {
+
+        var weights = new[] { 20, 22, 23, 25, 27, 30, 35, 37, 40, 42, 43, 45 };
+        var reps = new[] { 15, 15, 14, 12, 10, 8, 5, 5, 7, 10, 12, 15 };
+
+        BenchData = Enumerable.Range(1, 12)
+                              .Select(i => new BenchSet
+                                  {
+                                      Week = i,
+                                      WeightKg = weights[i - 1],
+                                      Reps = reps[i - 1]
+                                  })
+                              .ToList();
+
+        chartOptions = new ApexChartOptions<BenchSet>
+            {
+
+                Xaxis = new XAxis
+                {
+                    Categories = BenchData.Select(b => b.WeekLabel).ToArray(),
+                    Title = new AxisTitle { Text = "Week" }
+                },
+
+                Yaxis = new List<YAxis>
+            {
+                new YAxis
+                {
+                    Title      = new AxisTitle { Text = "Weight (kg)" },
+                    SeriesName = "Weight",
+                    Min        = 0,
+                    Max        = 60,
+                    TickAmount = 3
+                },
+                new YAxis
+                {
+                    Title          = new AxisTitle { Text = "Reps" },
+                    SeriesName     = "Reps",
+                    Opposite       = true,
+                    Min            = 0,
+                    Max            = 15,
+                    TickAmount     = 3
+                }
+            },
+
+                Colors = new List<string> { "#FF9800", "#000000" },
+                Legend = new Legend
+                {
+                    Position = LegendPosition.Top,
+                }
+            };
+    }
+}

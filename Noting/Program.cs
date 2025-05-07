@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components.Server;
 using Noting.Models;
 using Noting.Services;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // — MVC for Auth + API controllers
@@ -64,6 +65,11 @@ app.MapControllerRoute(
     pattern: "Auth/{action=Login}/{id?}",
     defaults: new { controller = "Auth" }
 );
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 // 3) Razor Pages (so _Host.cshtml can be served)
 app.MapRazorPages();

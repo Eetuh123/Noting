@@ -1,0 +1,93 @@
+﻿@using Noting.Models
+@using Microsoft.AspNetCore.Components.Authorization
+@inject Noting.Services.ExerciseService ExerciseService
+@inject AuthenticationStateProvider AuthStateProv
+
+<div class="bg-white rounded-lg shadow-md overflow-hidden">
+    @if (_rows == null)
+    {
+        <p class="p-4"><em>Loading…</em></p>
+    }
+    else if (!_rows.Any())
+    {
+        <p class="p-4">No exercises to show.</p>
+    }
+    else
+    {
+
+        <div class="bg-gray-100 border-b border-gray-200 px-4 py-2 text-lg font-semibold">
+            Latest by Exercise
+        </div>
+
+        <div class="p-4 overflow-x-auto">
+            <table class="min-w-full table-auto">
+                <thead>
+                    <tr class="bg-gray-50">
+                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Name</th>
+                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Weight</th>
+                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Reps</th>
+                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Volume</th>
+                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">1RM est</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-divider">
+                    @foreach (var row in _rows)
+                    {
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-2 text-sm text-gray-800">@row.NameTag</td>
+                            <td class="px-4 py-2 text-sm text-gray-800">@($"{row.Weight} kg")</td>
+                            <td class="px-4 py-2 text-sm text-gray-800">@($"{row.Reps} reps")</td>
+                            <td class="px-4 py-2 text-sm text-gray-800">@($"{row.Volume} kg")</td>
+                            <td class="px-4 py-2 text-sm text-gray-800">@($"{row.OneRepMaxEstimate:F1} kg")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<ExerciseRow>? _rows;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthStateProv.GetAuthenticationStateAsync()).User;
+        var entries = await ExerciseService.GetAllForCurrentUser(user);
+
+        _rows = entries
+          .GroupBy(e => e.NameTag)
+          .Select(g => g
+            .OrderByDescending(e => e.Date)
+            .First()
+          )
+          .Select(ex =>
+          {
+              var lastReps = ex.Reps.LastOrDefault()?.Reps ?? 0;
+              var volume = ex.Weight * lastReps;
+              // epley formula for 1RM estimate
+              var oneRm = lastReps > 0
+        ? ex.Weight * (1 + lastReps / 30.0)
+        : ex.Weight;
+              return new ExerciseRow
+                  {
+                      NameTag = ex.NameTag,
+                      Weight = ex.Weight,
+                      Reps = lastReps,
+                      Volume = volume,
+                      OneRepMaxEstimate = oneRm
+                  };
+          })
+          .OrderBy(r => r.NameTag, StringComparer.CurrentCultureIgnoreCase)
+          .ToList();
+    }
+
+    class ExerciseRow
+    {
+        public string NameTag { get; set; } = "";
+        public int Weight { get; set; }
+        public int Reps { get; set; }
+        public int Volume { get; set; }
+        public double OneRepMaxEstimate { get; set; }
+    }
+}
