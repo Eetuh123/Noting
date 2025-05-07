@@ -41,6 +41,7 @@ builder.Services.AddScoped<WorkoutNoteService>();
 builder.Services.AddScoped<AppState>();
 
 builder.Services.AddApexCharts();
+builder.Services.AddApplicationInsightsTelemetry();
 
 var app = builder.Build();
 
