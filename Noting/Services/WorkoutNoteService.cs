@@ -42,5 +42,24 @@ namespace Noting.Services
                 .Find(n => n.Id == id)
                 .FirstOrDefaultAsync();
         }
+        public async Task DeleteNoteAsync(ObjectId noteId)
+        {
+            var note = await GetNoteByIdAsync(noteId);
+            if (note == null) return;
+
+            if (note.ExerciseIds?.Any() == true)
+            {
+                var filter = Builders<Exercise>.Filter.In(e => e.Id, note.ExerciseIds);
+                var exercisesCol = DatabaseManipulator.database
+                                        .GetCollection<Exercise>(nameof(Exercise));
+                await exercisesCol.DeleteManyAsync(filter);
+            }
+            var notesCol = DatabaseManipulator.database
+                                  .GetCollection<WorkoutNote>(nameof(WorkoutNote));
+            var noteFilter = Builders<WorkoutNote>
+                                 .Filter
+                                 .Eq(n => n.Id, noteId);
+            await notesCol.DeleteOneAsync(noteFilter);
+        }
     }
 }

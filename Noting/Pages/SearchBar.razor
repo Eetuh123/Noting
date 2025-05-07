@@ -1,7 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
 
-<div class="flex items-center space-x-2 bg-gray-100 rounded-lg shadow-lg p-2">
+<div class="flex items-center space-x-2 bg-gray-100 rounded-lg shadow-lg p-2 bg-surface-main">
     <svg xmlns="http://www.w3.org/2000/svg"
          class="w-6 h-6 fill-highlight hover:cursor-pointer"
          fill="currentColor"
@@ -11,7 +11,7 @@
 
     @foreach (var term in Terms)
     {
-        <span class="flex items-center text-gray-700 text-sm px-3 py-1 rounded-full cursor-pointer"
+        <span class="flex bg-surface-muted items-center text-surface-main text-sm px-3 py-1 rounded-full cursor-pointer"
               @onclick="() => RemoveTerm(term)">
             @term
         </span>

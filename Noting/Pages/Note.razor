@@ -9,15 +9,22 @@
 @layout MainLayout
 @inject IJSRuntime JS
 @inject AppState AppState
+@inject NavigationManager NavManager
 
 
+@if (!IsLoaded)
+{
+        <p>Loading…</p>
+}
+else
+{
     <div class="border-b-2 alig border-divider mx-8 text-center font-semibold">
     <input class="text-center text-2xl font-semibold focus:outline-none pb-4"
                @bind="Tag"
                @bind:event="oninput"
                @onblur="SaveTag" />
     </div>
-    <div class="mx-8 my-2 relative">
+    <div class="mx-8 my-4 relative">
     <textarea @bind="NoteText"
               @bind:event="oninput"
               @onblur="SaveNote"
@@ -41,10 +48,25 @@
 </div>
 
 <p class="mx-8 text-sm text-gray-500">@SaveStatus</p>
+    <div class="fixed bottom-4 mx-8 mb-14  right-4 flex items-center space-x-4 z-50">
+        @if (_totalNotes <= 1)
+        {
+            <p class="text-sm text-gray-600 whitespace-nowrap">
+                You must keep at least one note before deleting.
+            </p>
+        }
 
+        <button class="px-4 py-2 bg-red-500 text-white rounded disabled:opacity-50 bg-highlight duration-300 border-2 border-surface-main hover:cursor-pointer hover:border-2 hover:border-highlight hover:text-highlight hover:bg-surface-main text-white font-semibold py-2 rounded"
+                @onclick="OnDeleteCurrentNote"
+                disabled="@(_totalNotes <= 1)">
+            Delete this note
+        </button>
+    </div>
+}
 @code {
     [Parameter] public string Id { get; set; }
 
+    private int _totalNotes;
     private WorkoutNote CurrentNote;
     private ObjectId UserId;
     private string Tag;
@@ -59,6 +81,8 @@
         IsLoaded = false;
         SaveStatus = "";
 
+        await CountNotes();
+
         if (!ObjectId.TryParse(Id, out var noteId))
             throw new Exception("Invalid note ID");
 
@@ -71,6 +95,49 @@
         NoteText = CurrentNote.NoteText;
         UserId   = CurrentNote.UserId;
         IsLoaded = true;
+    }
+    private async Task CountNotes()
+    {
+        var all = await NoteService.GetNotesForUserAsync(UserId);
+        _totalNotes = all.Count;
+    }
+    private async Task OnDeleteCurrentNote()
+    {
+        await CountNotes();
+        if (_totalNotes <= 1)
+        {
+            SaveStatus = "Cannot delete the last remaining note.";
+            return;
+        }
+        var notes = (await NoteService.GetNotesForUserAsync(UserId))
+                        .OrderByDescending(n => n.Date)
+                        .ToList();
+
+        var currentIndex = notes.FindIndex(n => n.Id == CurrentNote.Id);
+        WorkoutNote? target;
+        if (currentIndex + 1 < notes.Count)
+        {
+            target = notes[currentIndex + 1];
+        }
+        else if (currentIndex - 1 >= 0)
+        {
+            target = notes[currentIndex - 1];
+        }
+        else
+        {
+            target = null;
+        }
+        await NoteService.DeleteNoteAsync(CurrentNote.Id);
+        AppState.RaiseNotesChanged();
+
+        if (target != null)
+        {
+            NavManager.NavigateTo($"/note/{target.Id}");
+        }
+        else
+        {
+            NavManager.NavigateTo("/");
+        }
     }
 
     private async Task SaveDate()
@@ -99,30 +166,37 @@
         CurrentNote.NoteText = NoteText;
 
         var lines = NoteText
-          .Replace("\r\n", "\n")
-          .Replace("\r", "\n")
-          .Split('\n')
-          .Select(l => l.Trim())
-          .Where(l => l.Length > 0)
-          .ToList();
+            .Replace("\r\n", "\n")
+            .Replace("\r", "\n")
+            .Split('\n')
+            .Select(l => l.Trim())
+            .Where(l => l.Length > 0)
+            .ToList();
 
         var oldIds = CurrentNote.ExerciseIds;
         var newIds = new List<ObjectId>();
 
         for (int i = 0; i < lines.Count; i++)
         {
-            ObjectId? id = i < oldIds.Count ? oldIds[i] : (ObjectId?) null;
+            ObjectId? existingId = i < oldIds.Count ? oldIds[i] : (ObjectId?)null;
             var ex = await ExerciseService.SaveFromText(
                 lines[i],
                 UserId,
                 CurrentNote.Date,
-                id);
+                existingId);
             newIds.Add(ex.Id);
+        }
+
+        var removedIds = oldIds.Except(newIds).ToList();
+        foreach (var removed in removedIds)
+        {
+            await ExerciseService.DeleteExerciseAsync(removed);
         }
 
         CurrentNote.ExerciseIds = newIds;
         NoteService.SaveNote(CurrentNote);
 
-        SaveStatus = $"Saved at {DateTime.Now:T} ({lines.Count} exercises)";
+        SaveStatus = $"Saved at {DateTime.Now:T} — {newIds.Count} exercises, deleted {removedIds.Count}";
+        AppState.RaiseNotesChanged();
     }
 }

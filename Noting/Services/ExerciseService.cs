@@ -64,6 +64,19 @@ namespace Noting.Services
 
             return exercise;
         }
+        public async Task DeleteExerciseAsync(ObjectId exerciseId)
+        {
+            var filter = Builders<Exercise>
+                          .Filter
+                          .Eq(e => e.Id, exerciseId);
+
+
+            var col = DatabaseManipulator
+                        .database
+                        .GetCollection<Exercise>(nameof(Exercise));
+
+            var result = await col.DeleteOneAsync(filter);
+        }
         public async Task<List<Exercise>> GetAllForCurrentUser(ClaimsPrincipal user)
         {
             var userIdString = user.FindFirstValue(ClaimTypes.NameIdentifier);
