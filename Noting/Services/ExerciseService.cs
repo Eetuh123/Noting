@@ -89,13 +89,6 @@ namespace Noting.Services
                 .SortByDescending(e => e.Date)
                 .ToListAsync();
         }
-        public async Task<Exercise?> GetByTextAndUserAsync(string text, ObjectId userId)
-        {
-            return await DatabaseManipulator
-                .Collection<Exercise>()
-                .Find(e => e.UserId == userId && e.RawText == text)
-                .FirstOrDefaultAsync();
-        }
         public ParsedExercise ParseTokens(List<Token> tokens)
         {
             string exerciseName = "";
@@ -111,6 +104,17 @@ namespace Noting.Services
             for (int i = 0; i < tokens.Count; i++)
             {
                 var token = tokens[i];
+
+                bool isRepStart = (i + 1 < tokens.Count && tokens[i + 1].Type == "Separator");
+                if (exerciseName.Length == 0
+                    && weight == null
+                    && token.Type == "Number"
+                    && !isRepStart
+                    && int.TryParse(token.Value, out var leading))
+                {
+                    weight = leading;
+                    continue;
+                }
 
                 // Try to create number chain as long as there are numbers and separators
                 if (token.Type == "Number"
@@ -134,11 +138,35 @@ namespace Noting.Services
                             j += 2;
                             continue;
                         }
+                        isNameBuilding = false;
                         break;
                     }
                     // Stuff for Chain that is +2 size
                     if (repNumbers.Count >= 2)
                     {
+
+                        int? nextWeight = null;
+                        if (weight == null
+                            && j + 1 < tokens.Count
+                            && tokens[j + 1].Type == "Number"
+                            && int.TryParse(tokens[j + 1].Value, out var w))
+                        {
+                            nextWeight = w;
+                        }
+
+                        if (weight == null)
+                        {
+                            if (pendingNumbers.Count > 0)
+                            {
+                                weight = pendingNumbers.Last();
+                                pendingNumbers.RemoveAt(pendingNumbers.Count - 1);
+                            }
+                            else if (nextWeight.HasValue)
+                            {
+                                weight = nextWeight.Value;
+                            }
+                        }
+
                         // pop the last pending number as weight
                         if (weight == null && pendingNumbers.Count > 0)
                         {
@@ -218,6 +246,8 @@ namespace Noting.Services
             if (repsPerSet.Count == 0 && pendingNumbers.Count > 0)
             {
                 var leftovers = pendingNumbers;
+                int mn = leftovers.Min();
+                int mx = leftovers.Max();
 
                 if (leftovers.Count == 1)
                 {
@@ -227,10 +257,14 @@ namespace Noting.Services
                     else
                         weight = x;
                 }
+                else if (mn <= 5 && leftovers.Count == 2)
+                {
+                    var (sets, reps) = DisambiguateTwoNumbers(leftovers[0], leftovers[1]);
+                    repsPerSet = Enumerable.Repeat(reps, sets).ToList();
+                }
                 else
                 {
-                    int mn = leftovers.Min();
-                    int mx = leftovers.Max();
+
 
                     if (weight == null && mx - mn > OutlierThreshold)
                     {
