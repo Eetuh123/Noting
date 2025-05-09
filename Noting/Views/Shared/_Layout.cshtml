@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@using System.Security.Claims
+
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -17,7 +20,10 @@
     </div>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    @if (User.Identity.IsAuthenticated)
+    {
     <script src="~/_framework/blazor.server.js"></script>
+    }
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
