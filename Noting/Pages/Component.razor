@@ -1,5 +1,9 @@
 ﻿@page "/chart"
 @inject IJSRuntime JS
+@using MongoDB.Bson
+@using System.Security.Claims
+@inject ExerciseService ExerciseService
+@inject ICurrentUserService CurrentUser
 
 <div class="w-[700px] mx-auto my-8">
 
@@ -9,7 +13,7 @@
         align-items: center;
         margin-bottom: 1rem;
         font-size: 0.9rem;
-      ">
+    ">
 
         <span>
             Avg.&nbsp;R <strong>@AvgRep</strong>
@@ -29,7 +33,7 @@
             width: 16px; height: 8px;
             border-radius: 4px;
             background: #e74c3c;
-          "></span>
+            "></span>
             <strong>@Weight</strong>&nbsp;kg
         </span>
 
@@ -39,15 +43,16 @@
             width: 16px; height: 8px;
             border-radius: 4px;
             background: #2ecc71;
-          "></span>
+            "></span>
             <strong>@SecondaryWeight</strong>&nbsp;kg
         </span>
     </div>
 
-    <canvas id="benchChart" width="700" height="350"></canvas>
+    <canvas id="benchChart"></canvas>
 </div>
 
 @code {
+    private List<Exercise> allUserExercises = new();
     private int AvgRep = 8;
     private int Rep5 = 5;
     private int Rep15 = 15;
@@ -58,6 +63,13 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+
+        var userId = await CurrentUser.GetUserIdAsync();
+        var exercise = await ExerciseService.GetSameNameExercises();
+
+        var weightData = exercise.Select(e => e.Weight).ToArray();
+        var repsData = exercise.Select(e => e.Reps.Sum(r => r.Reps ?? 0)).ToArray();
+        var dateData = exercise.Select(e => e.Date.ToString("dd.MM")).ToArray();
         if (!firstRender) return;
 
         var config = new
@@ -65,16 +77,13 @@
             type = "bar",
             data = new
             {
-                labels = new[] {
-          "1 W","2 W","3 W","4 W","5 W","6 W",
-          "7 W","8 W","9 W","10 W","11 W","12 W"
-        },
+                labels = dateData,
                 datasets = new object[] {
                                new {
             type = "line",
             label = "Reps",
             yAxisID   = "y2",
-            data = new[] {5,8,7,10,6,12,9,15,14,16,18,20},
+            data = repsData,
             borderColor = "#333",
             borderWidth = 2,
             fill = false,
@@ -84,7 +93,7 @@
             type = "bar",
             label = "Weight (kg)",
             yAxisID   = "y",
-            data = new[] {20,30,25,40,35,45,38,50,48,55,52,60},
+            data = weightData,
             backgroundColor = "rgba(231,76,60,0.8)"
           },
     }
@@ -114,8 +123,6 @@
                 }
             }
         };
-
-        // call into window.exerciseChart.create(...)
         _chartRef = await JS.InvokeAsync<object>(
           "exerciseChart.create",
           "benchChart",

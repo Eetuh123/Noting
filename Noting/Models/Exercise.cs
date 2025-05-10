@@ -21,7 +21,7 @@ namespace Noting.Models
 
         public bool TrySetCurrentUserId(ClaimsPrincipal user)
         {
-            var userIdString = user.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            var userIdString = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (ObjectId.TryParse(userIdString, out var id))
             {
                 UserId = id;

@@ -42,7 +42,7 @@
     protected override async Task OnInitializedAsync()
     {
         var user = (await AuthStateProv.GetAuthenticationStateAsync()).User;
-        var entries = await ExerciseService.GetAllForCurrentUser(user);
+        var entries = await ExerciseService.GetAllForCurrentUser();
         _exerciseNames = entries
           .Select(e => e.NameTag)
           .Distinct(StringComparer.OrdinalIgnoreCase)

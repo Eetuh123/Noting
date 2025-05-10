@@ -14,6 +14,8 @@ builder.Services.AddControllersWithViews();
 // — Razor Pages (needed to serve _Host.cshtml)
 builder.Services.AddRazorPages();
 
+builder.Services.AddHttpContextAccessor();
+
 // — Mongo init
 DatabaseManipulator.Initialize(builder.Configuration);
 
@@ -39,6 +41,7 @@ builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStat
 builder.Services.AddScoped<ExerciseService>();
 builder.Services.AddScoped<WorkoutNoteService>();
 builder.Services.AddScoped<AppState>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 builder.Services.AddApexCharts();
 builder.Services.AddApplicationInsightsTelemetry();

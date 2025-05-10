@@ -42,7 +42,7 @@ namespace Noting.Controllers
         public async Task<IActionResult> ForExercise(string exerciseName)
         {
             var user = HttpContext.User;
-            var all = await _exerciseService.GetAllForCurrentUser(user);
+            var all = await _exerciseService.GetAllForCurrentUser();
 
             if (exerciseName.Equals("all", StringComparison.OrdinalIgnoreCase))
             {

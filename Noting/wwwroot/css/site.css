@@ -620,6 +620,9 @@
   .h-\[80vh\] {
     height: 80vh;
   }
+  .h-\[350px\] {
+    height: 350px;
+  }
   .h-\[600px\] {
     height: 600px;
   }
@@ -661,6 +664,9 @@
   }
   .w-\[700px\] {
     width: 700px;
+  }
+  .w-\[10000px\] {
+    width: 10000px;
   }
   .w-auto {
     width: auto;
