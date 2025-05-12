@@ -1,5 +1,8 @@
 ﻿window.exerciseChart = {
+    _charts: {},
     create: (canvasId, config) => {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+
         config.options = config.options || {};
         config.options.scales = config.options.scales || {};
         config.options.scales.y2 = config.options.scales.y2 || {};
@@ -12,16 +15,21 @@
         config.options.scales.y2.ticks.callback = r => r + 'reps';
         config.options.scales.y2.position = 'right';
 
-        const ctx = document.getElementById(canvasId).getContext('2d');
-        return new Chart(ctx, config);
+        window.exerciseChart._charts[canvasId] = new Chart(ctx, config);
     },
 
-    update: (chart, newData) => {
-        chart.data.datasets = newData.datasets;
+    update: (canvasId, newDatasets) => {
+        const chart = window.exerciseChart._charts[canvasId];
+        if (!chart) return;
+        chart.data.datasets = newDatasets;
         chart.update();
     },
 
-    destroy: (chart) => {
-        chart.destroy();
+    destroy: (CanvasId) => {
+        const chart = window.exerciseChart._charts[canvasId];
+        if (chart) {
+            chart.destroy();
+            delete window.exerciseChart._charts[canvasId];
+        }
     }
 };

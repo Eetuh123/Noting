@@ -96,7 +96,7 @@ namespace Noting.Services
                 .SortByDescending(e => e.Date)
                 .ToListAsync();
         }
-        public async Task<List<Exercise>> GetSameNameExercises()
+        public async Task<List<Exercise>> GetSameNameExercises(string exerciseName)
         {
             var userId = await _currentUser.GetUserIdAsync();
             if (userId == null)
@@ -104,20 +104,14 @@ namespace Noting.Services
 
             var collection = DatabaseManipulator.Collection<Exercise>();
 
-            // Step 1: Get one exercise to extract the NameTag
-            var firstExercise = await collection
-                .Find(e => e.UserId == userId)
-                .FirstOrDefaultAsync();
+            var exercise = await collection
+                .Find(e => e.UserId == userId && e.NameTag == exerciseName)
+                .ToListAsync();
 
-            if (firstExercise == null)
+            if (exercise == null)
                 return new List<Exercise>();
 
-            string name = firstExercise.NameTag;
-
-            // Step 2: Fetch all exercises with that same name
-            return await collection
-                .Find(e => e.UserId == userId && e.NameTag == name)
-                .ToListAsync();
+            return exercise;
         }
         public ParsedExercise ParseTokens(List<Token> tokens)
         {
