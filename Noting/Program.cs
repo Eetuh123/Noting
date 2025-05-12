@@ -14,6 +14,8 @@ builder.Services.AddControllersWithViews();
 // — Razor Pages (needed to serve _Host.cshtml)
 builder.Services.AddRazorPages();
 
+builder.Services.AddHttpContextAccessor();
+
 // — Mongo init
 DatabaseManipulator.Initialize(builder.Configuration);
 
@@ -31,7 +33,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddAuthorization();
 
 // — Blazor Server
-builder.Services.AddServerSideBlazor();
+builder.Services.AddServerSideBlazor().AddCircuitOptions(opts => { opts.DetailedErrors = true; }); ;
 // — Expose the auth state to Blazor components
 builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
 
@@ -39,6 +41,7 @@ builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStat
 builder.Services.AddScoped<ExerciseService>();
 builder.Services.AddScoped<WorkoutNoteService>();
 builder.Services.AddScoped<AppState>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 builder.Services.AddApexCharts();
 builder.Services.AddApplicationInsightsTelemetry();

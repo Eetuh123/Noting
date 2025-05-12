@@ -8,7 +8,9 @@ namespace NotingTesting.Services
 {
     public class TokenParseTester
     {
-        private ExerciseService CreateServiceWithMocks(out Mock<IMongoCollection<Exercise>> mockCollection)
+        private ExerciseService CreateServiceWithMocks(
+            out Mock<IMongoCollection<Exercise>> mockCollection,
+            Mock<ICurrentUserService> mockUser)
         {
             mockCollection = new Mock<IMongoCollection<Exercise>>();
             mockCollection
@@ -28,20 +30,24 @@ namespace NotingTesting.Services
 
             DatabaseManipulator.database = mockDb.Object;
 
-            return new ExerciseService();
+            return new ExerciseService(mockUser.Object);
         }
+
         [Fact]
         public async Task SaveFromText_NameWeightRepsSeparatorSetsNotes_ParsesCorrectly()
         {
-            var service = CreateServiceWithMocks(out var mockCollection);
+            var userId = ObjectId.GenerateNewId();
+            var mockUser = new Mock<ICurrentUserService>();
+            mockUser.Setup(u => u.GetUserIdAsync()).ReturnsAsync(userId);
+
+            var service = CreateServiceWithMocks(out var mockCollection, mockUser);
 
             // Arrange input
             var rawText = "bench press 50kg 6x5 cool";
-            var userId = ObjectId.GenerateNewId();
             var noteDate = DateTimeOffset.UtcNow;
 
             // Act
-            var result = await service.SaveFromText(rawText, userId, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate);
 
             // Assert parsing fields
             Assert.Equal("bench press", result.NameTag);
@@ -71,16 +77,19 @@ namespace NotingTesting.Services
             ), Times.Once);
         }
         [Fact]
-        public async Task SaveFromText_WeightUnitNameRepsSeparatorSetsNotes_ParsesCorrectly()
+        public async Task SaveFromText_WeightUnitNameSymetricRepsSeparatorSetsNotes_ParsesCorrectly()
         {
-            var service = CreateServiceWithMocks(out var mockCollection);
+            var userId = ObjectId.GenerateNewId();
+            var mockUser = new Mock<ICurrentUserService>();
+            mockUser.Setup(u => u.GetUserIdAsync()).ReturnsAsync(userId);
+
+            var service = CreateServiceWithMocks(out var mockCollection, mockUser);
 
 
             var rawText = "50kg bench press 5x5 cool";
-            var userId = ObjectId.GenerateNewId();
             var noteDate = DateTimeOffset.UtcNow;
 
-            var result = await service.SaveFromText(rawText, userId, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);
@@ -107,15 +116,57 @@ namespace NotingTesting.Services
             ), Times.Once);
         }
         [Fact]
-        public async Task SaveFromText_WeightNameSetsSeparatorRepsNotes_ParseCorrectly()
+        public async Task SaveFromText_WeightNameRepsSeparatorNotes_ParsesCorrectly()
         {
-            var service = CreateServiceWithMocks(out var mockCollection);
-
-            var rawText = "50 bench press 2x8 cool";
             var userId = ObjectId.GenerateNewId();
+            var mockUser = new Mock<ICurrentUserService>();
+            mockUser.Setup(u => u.GetUserIdAsync()).ReturnsAsync(userId);
+
+            var service = CreateServiceWithMocks(out var mockCollection, mockUser);
+
+
+            var rawText = "50 bench press 12x15 cool";
             var noteDate = DateTimeOffset.UtcNow;
 
-            var result = await service.SaveFromText(rawText, userId, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate);
+
+            Assert.Equal("bench press", result.NameTag);
+            Assert.Equal(50, result.Weight);
+
+            var reps = result.Reps
+                             .Select(r => r.Reps.GetValueOrDefault())
+                             .ToArray();
+            Assert.Equal(new[] { 12, 15 }, reps);
+
+            Assert.Equal("cool", result.Notes);
+            Assert.Equal(userId, result.UserId);
+            Assert.Equal(rawText.Trim(), result.RawText);
+            Assert.Equal(noteDate, result.Date);
+
+            mockCollection.Verify(c => c.ReplaceOneAsync(
+                It.IsAny<FilterDefinition<Exercise>>(),
+                It.Is<Exercise>(e =>
+                    e.Id == result.Id &&
+                    e.UserId == userId &&
+                    e.NameTag == result.NameTag
+                ),
+                It.IsAny<ReplaceOptions>(),
+                It.IsAny<CancellationToken>()
+            ), Times.Once);
+        }
+        [Fact]
+        public async Task SaveFromText_WeightNameSetsSeparatorRepsNotes_ParseCorrectly()
+        {
+            var userId = ObjectId.GenerateNewId();
+            var mockUser = new Mock<ICurrentUserService>();
+            mockUser.Setup(u => u.GetUserIdAsync()).ReturnsAsync(userId);
+
+            var service = CreateServiceWithMocks(out var mockCollection, mockUser);
+
+            var rawText = "50 bench press 2x8 cool";
+            var noteDate = DateTimeOffset.UtcNow;
+
+            var result = await service.SaveFromText(rawText, noteDate);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);
@@ -144,13 +195,16 @@ namespace NotingTesting.Services
         [Fact]
         public async Task SaveFromText_WeightNameRepsSetsNotes_ParseCorrectly()
         {
-            var service = CreateServiceWithMocks(out var mockCollection);
+            var userId = ObjectId.GenerateNewId();
+            var mockUser = new Mock<ICurrentUserService>();
+            mockUser.Setup(u => u.GetUserIdAsync()).ReturnsAsync(userId);
+
+            var service = CreateServiceWithMocks(out var mockCollection, mockUser);
 
             var rawText = "50 bench press 8 2 cool";
-            var userId = ObjectId.GenerateNewId();
             var noteDate = DateTimeOffset.UtcNow;
 
-            var result = await service.SaveFromText(rawText, userId, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);
@@ -177,15 +231,18 @@ namespace NotingTesting.Services
         ), Times.Once);
         }
         [Fact]
-        public async Task SaveFromText_WeightUnitNameRepsNotes_ParseCorrectly()
+        public async Task SaveFromText_WeightUnitNameReps3xNotes_ParseCorrectly()
         {
-            var service = CreateServiceWithMocks(out var mockCollection);
+            var userId = ObjectId.GenerateNewId();
+            var mockUser = new Mock<ICurrentUserService>();
+            mockUser.Setup(u => u.GetUserIdAsync()).ReturnsAsync(userId);
+
+            var service = CreateServiceWithMocks(out var mockCollection, mockUser);
 
             var rawText = "50kg bench press 8 8 8 cool";
-            var userId = ObjectId.GenerateNewId();
             var noteDate = DateTimeOffset.UtcNow;
 
-            var result = await service.SaveFromText(rawText, userId, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);
@@ -212,15 +269,18 @@ namespace NotingTesting.Services
         ), Times.Once);
         }
         [Fact]
-        public async Task SaveFromText_WeightNameRepsNotes_ParseCorrectly()
+        public async Task SaveFromText_WeightNameReps3xNotes_ParseCorrectly()
         {
-            var service = CreateServiceWithMocks(out var mockCollection);
+            var userId = ObjectId.GenerateNewId();
+            var mockUser = new Mock<ICurrentUserService>();
+            mockUser.Setup(u => u.GetUserIdAsync()).ReturnsAsync(userId);
+
+            var service = CreateServiceWithMocks(out var mockCollection, mockUser);
 
             var rawText = "50 bench press 8 8 8 cool";
-            var userId = ObjectId.GenerateNewId();
             var noteDate = DateTimeOffset.UtcNow;
 
-            var result = await service.SaveFromText(rawText, userId, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);
@@ -247,15 +307,18 @@ namespace NotingTesting.Services
         ), Times.Once);
         }
         [Fact]
-        public async Task SaveFromText_WeightNameRepsWithSeparatorsNotes_ParseCorrectly()
+        public async Task SaveFromText_WeightNameRepsWithSeparators3xNotes_ParseCorrectly()
         {
-            var service = CreateServiceWithMocks(out var mockCollection);
+            var userId = ObjectId.GenerateNewId();
+            var mockUser = new Mock<ICurrentUserService>();
+            mockUser.Setup(u => u.GetUserIdAsync()).ReturnsAsync(userId);
+
+            var service = CreateServiceWithMocks(out var mockCollection, mockUser);
 
             var rawText = "50 bench press 8x8x8 cool";
-            var userId = ObjectId.GenerateNewId();
             var noteDate = DateTimeOffset.UtcNow;
 
-            var result = await service.SaveFromText(rawText, userId, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);
@@ -282,15 +345,18 @@ namespace NotingTesting.Services
         ), Times.Once);
         }
         [Fact]
-        public async Task SaveFromText_NameRepsWeightNotes_ParseCorrectly()
+        public async Task SaveFromText_NameReps3xWeightNotes_ParseCorrectly()
         {
-            var service = CreateServiceWithMocks(out var mockCollection);
+            var userId = ObjectId.GenerateNewId();
+            var mockUser = new Mock<ICurrentUserService>();
+            mockUser.Setup(u => u.GetUserIdAsync()).ReturnsAsync(userId);
+
+            var service = CreateServiceWithMocks(out var mockCollection, mockUser);
 
             var rawText = "bench press 8 8 8 50 cool";
-            var userId = ObjectId.GenerateNewId();
             var noteDate = DateTimeOffset.UtcNow;
 
-            var result = await service.SaveFromText(rawText, userId, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);
@@ -319,13 +385,16 @@ namespace NotingTesting.Services
         [Fact]
         public async Task SaveFromText_NameWeightRepsWithSeparatorNotes_ParseCorrectly()
         {
-            var service = CreateServiceWithMocks(out var mockCollection);
+            var userId = ObjectId.GenerateNewId();
+            var mockUser = new Mock<ICurrentUserService>();
+            mockUser.Setup(u => u.GetUserIdAsync()).ReturnsAsync(userId);
+
+            var service = CreateServiceWithMocks(out var mockCollection, mockUser);
 
             var rawText = "bench press 50 8/8/8 cool";
-            var userId = ObjectId.GenerateNewId();
             var noteDate = DateTimeOffset.UtcNow;
 
-            var result = await service.SaveFromText(rawText, userId, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);
@@ -352,15 +421,57 @@ namespace NotingTesting.Services
         ), Times.Once);
         }
         [Fact]
-        public async Task SaveFromText_NameRepsWithSeparatorWeightNotes_ParseCorrectly()
+        public async Task SaveFromText_WeightNameRepsSeparator3x_ParsesCorrectly()
         {
-            var service = CreateServiceWithMocks(out var mockCollection);
-
-            var rawText = "bench press 8/8/8 50 cool";
             var userId = ObjectId.GenerateNewId();
+            var mockUser = new Mock<ICurrentUserService>();
+            mockUser.Setup(u => u.GetUserIdAsync()).ReturnsAsync(userId);
+
+            var service = CreateServiceWithMocks(out var mockCollection, mockUser);
+
+
+            var rawText = "50 bench press 10x12x10";
             var noteDate = DateTimeOffset.UtcNow;
 
-            var result = await service.SaveFromText(rawText, userId, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate);
+
+            Assert.Equal("bench press", result.NameTag);
+            Assert.Equal(50, result.Weight);
+
+            var reps = result.Reps
+                             .Select(r => r.Reps.GetValueOrDefault())
+                             .ToArray();
+            Assert.Equal(new[] { 10, 12, 10 }, reps);
+
+            Assert.Equal("", result.Notes);
+            Assert.Equal(userId, result.UserId);
+            Assert.Equal(rawText.Trim(), result.RawText);
+            Assert.Equal(noteDate, result.Date);
+
+            mockCollection.Verify(c => c.ReplaceOneAsync(
+                It.IsAny<FilterDefinition<Exercise>>(),
+                It.Is<Exercise>(e =>
+                    e.Id == result.Id &&
+                    e.UserId == userId &&
+                    e.NameTag == result.NameTag
+                ),
+                It.IsAny<ReplaceOptions>(),
+                It.IsAny<CancellationToken>()
+            ), Times.Once);
+        }
+        [Fact]
+        public async Task SaveFromText_NameRepsWithSeparatorWeightNotes_ParseCorrectly()
+        {
+            var userId = ObjectId.GenerateNewId();
+            var mockUser = new Mock<ICurrentUserService>();
+            mockUser.Setup(u => u.GetUserIdAsync()).ReturnsAsync(userId);
+
+            var service = CreateServiceWithMocks(out var mockCollection, mockUser);
+
+            var rawText = "bench press 8/8/8 50 cool";
+            var noteDate = DateTimeOffset.UtcNow;
+
+            var result = await service.SaveFromText(rawText, noteDate);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);
@@ -389,13 +500,16 @@ namespace NotingTesting.Services
         [Fact]
         public async Task SaveFromText_NameRepsWithSeparatorNotes_ParseCorrectly()
         {
-            var service = CreateServiceWithMocks(out var mockCollection);
+            var userId = ObjectId.GenerateNewId();
+            var mockUser = new Mock<ICurrentUserService>();
+            mockUser.Setup(u => u.GetUserIdAsync()).ReturnsAsync(userId);
+
+            var service = CreateServiceWithMocks(out var mockCollection, mockUser);
 
             var rawText = "bench press 8/8/8 cool";
-            var userId = ObjectId.GenerateNewId();
             var noteDate = DateTimeOffset.UtcNow;
 
-            var result = await service.SaveFromText(rawText, userId, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(0, result.Weight);
@@ -424,13 +538,16 @@ namespace NotingTesting.Services
         [Fact]
         public async Task SaveFromText_NameRepsNotes_ParseCorrectly()
         {
-            var service = CreateServiceWithMocks(out var mockCollection);
+            var userId = ObjectId.GenerateNewId();
+            var mockUser = new Mock<ICurrentUserService>();
+            mockUser.Setup(u => u.GetUserIdAsync()).ReturnsAsync(userId);
+
+            var service = CreateServiceWithMocks(out var mockCollection, mockUser);
 
             var rawText = "bench press 8 8 8 cool";
-            var userId = ObjectId.GenerateNewId();
             var noteDate = DateTimeOffset.UtcNow;
 
-            var result = await service.SaveFromText(rawText, userId, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(0 ,result.Weight);
@@ -459,13 +576,16 @@ namespace NotingTesting.Services
         [Fact]
         public async Task SaveFromText_NameWeightUnitReps_ParseCorrectly()
         {
-            var service = CreateServiceWithMocks(out var mockCollection);
+            var userId = ObjectId.GenerateNewId();
+            var mockUser = new Mock<ICurrentUserService>();
+            mockUser.Setup(u => u.GetUserIdAsync()).ReturnsAsync(userId);
+
+            var service = CreateServiceWithMocks(out var mockCollection, mockUser);
 
             var rawText = "bench press 50kg 5x6";
-            var userId = ObjectId.GenerateNewId();
             var noteDate = DateTimeOffset.UtcNow;
 
-            var result = await service.SaveFromText(rawText, userId, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);

@@ -11,10 +11,14 @@
     <base href="~/hello" />
     <link href="~/css/site.css" rel="stylesheet" />
 </head>
-<body class="font-Raleway bg-surface-main">
+<body class="font-raleway bg-surface-main">
     <app>
         <component type="typeof(App)" render-mode="@(RenderMode.ServerPrerendered)" />
     </app>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/exerciseChart.js" asp-append-version="true"></script>
     <script src="_framework/blazor.server.js"></script>
 </body>
 </html>

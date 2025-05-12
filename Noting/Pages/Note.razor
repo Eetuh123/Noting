@@ -180,7 +180,6 @@ else
             ObjectId? existingId = i < oldIds.Count ? oldIds[i] : (ObjectId?)null;
             var ex = await ExerciseService.SaveFromText(
                 lines[i],
-                UserId,
                 CurrentNote.Date,
                 existingId);
             newIds.Add(ex.Id);

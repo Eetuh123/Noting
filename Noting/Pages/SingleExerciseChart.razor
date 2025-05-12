@@ -1,0 +1,153 @@
+﻿@inject IJSRuntime JS
+@using MongoDB.Bson
+@using System.Security.Claims
+@inject ExerciseService ExerciseService
+@inject ICurrentUserService CurrentUser
+
+<div class="w-full mx-auto my-8 bg-gray-100 border-b border-gray-200 px-4 py-2 text-lg border-rounded font-semibold">
+    <div class="bold text-nowrap">
+        <h1>@CardTitle</h1>
+    </div>
+    <div class="flex justify-center w-full my-2 mx-2 font-normal">
+        <div class="flex gap-2 w-1/2">
+            <div class="w-full">
+                <div class="flex row gap-4 justify-center">
+                    <p>Avg.R</p>
+                    <p>@LatestReps </p>
+                    <div class="inline-flex items-center gap-1 text-[#B40303]">
+                        <p>@AvgReps </p>
+                        <svg class="w-3 h-3 align-middle" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M2.9734 2.14035C2.82697 2.28681 2.58954 2.28684 2.44307 2.14041L0.942906 0.640576C0.796442 0.494146 0.796415 0.256709 0.942846 0.110246C1.08928 -0.0362175 1.32671 -0.0362443 1.47318 0.110186L2.70815 1.34488L3.94285 0.109907C4.08928 -0.0365559 4.32671 -0.0365827 4.47318 0.109848C4.61964 0.256277 4.61967 0.493714 4.47324 0.640177L2.9734 2.14035Z" fill="#B40303" />
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M3.09166 4.97882C2.88015 5.1741 2.53718 5.17414 2.32563 4.9789L0.158734 2.97915C-0.0528221 2.78391 -0.0528578 2.46733 0.158655 2.27204C0.370166 2.07675 0.713131 2.07671 0.924687 2.27195L2.70852 3.9182L4.49199 2.27155C4.7035 2.07626 5.04646 2.07623 5.25802 2.27146C5.46958 2.4667 5.46961 2.78329 5.2581 2.97857L3.09166 4.97882Z" fill="#B40303" />
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="bg-[#e74c3c] w-full h-4"></div>
+            </div>
+            <div class="w-full">
+                <div class="flex row gap-4 justify-center">
+                    <p>Weight</p>
+                    <p>@LatestWeight</p>
+                    <div class="inline-flex items-center gap-1 text-[#03B409]">
+                        <p>@AvgWeight </p>
+                        <svg class="w-3 h-3 align-middle" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M2.44321 2.98483C2.58966 2.83839 2.82709 2.83839 2.97354 2.98483L4.47354 4.48483C4.61999 4.63128 4.61999 4.86872 4.47354 5.01516C4.32709 5.16161 4.08966 5.16161 3.94321 5.01516L2.70837 3.78033L1.47354 5.01516C1.32709 5.16161 1.08966 5.16161 0.943209 5.01516C0.796762 4.86872 0.796762 4.63128 0.943209 4.48484L2.44321 2.98483Z" fill="#03B409" />
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M2.32532 0.146447C2.53685 -0.0488155 2.87982 -0.0488155 3.09135 0.146447L5.25802 2.14645C5.46955 2.34171 5.46955 2.65829 5.25802 2.85355C5.04648 3.04882 4.70352 3.04882 4.49198 2.85355L2.70833 1.20711L0.924683 2.85355C0.713149 3.04882 0.370184 3.04882 0.158651 2.85355C-0.0528835 2.65829 -0.0528835 2.34171 0.15865 2.14645L2.32532 0.146447Z" fill="#03B409" />
+                        </svg>
+                    </div>
+
+                </div>
+                <div class="bg-black w-full h-4"></div>
+            </div>
+        </div>
+    </div>
+
+
+    <canvas id="@CanvasId"></canvas>
+</div>
+
+@code {
+    [Parameter]
+    public string ExerciseName { get; set; }
+    private List<Exercise> allUserExercises = new();
+    private string CardTitle;
+    private int LatestReps;
+    private double AvgReps;
+    private int LatestWeight;
+    private double AvgWeight;
+
+    private int[] WeightData;
+    private int[] RepsData;
+    private string[] DateData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userId = await CurrentUser.GetUserIdAsync();
+        var exercise = await ExerciseService.GetSameNameExercises(ExerciseName);
+
+        WeightData = exercise.Select(e => e.Weight).ToArray();
+        RepsData = exercise.Select(e => e.Reps.Sum(r => r.Reps ?? 0)).ToArray();
+        DateData = exercise.Select(e => e.Date.ToString("dd.MM")).ToArray();
+
+        LatestWeight = WeightData.Last();
+        LatestReps = RepsData.Last();
+        AvgWeight = WeightData.Average();
+        AvgReps = RepsData.Average();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrEmpty(ExerciseName))
+        {
+            CardTitle = char.ToUpper(ExerciseName[0]) + ExerciseName.Substring(1);
+        }
+
+    }
+
+    private string CanvasId => $"{ExerciseName.Replace(" ", "")}Chart";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        
+        if (!firstRender) return;
+
+        var config = new
+        {
+            type = "bar",
+            data = new
+            {
+                labels = DateData,
+                datasets = new object[] {
+                               new {
+            type = "line",
+            label = "Reps",
+            yAxisID   = "y2",
+            data = RepsData,
+            borderColor = "#333",
+            borderWidth = 2,
+            fill = false,
+            tension = 0.1
+          },
+          new {
+            type = "bar",
+            label = "Weight (kg)",
+            yAxisID   = "y",
+            data = WeightData,
+            backgroundColor = "rgba(231,76,60,0.8)"
+          },
+    }
+            },
+            options = new
+            {
+                plugins = new
+                {
+                    legend = new { display = false },
+                    tooltip = new { mode = "index", intersect = false }
+                },
+                scales = new
+                {
+                    x = new { grid = new { display = false } },
+                    y = new
+                    {
+                        beginAtZero = true,
+                        grid = new { borderDash = new[] { 4, 2 } }
+                    },
+                    y2 = new
+                    {
+                        beginAtZero = true,
+                        grid = new { drawOnChartArea = false }
+
+                    }
+
+                }
+            }
+        };
+        await JS.InvokeVoidAsync("exerciseChart.create", CanvasId, config);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await JS.InvokeVoidAsync("exerciseChart.destroy", CanvasId);
+    }
+}

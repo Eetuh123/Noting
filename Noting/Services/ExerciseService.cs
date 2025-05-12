@@ -9,19 +9,26 @@ namespace Noting.Services
 {
     public class ExerciseService
     {
+
+        private readonly ICurrentUserService _currentUser;
+
         private readonly List<PatternConfig> _cleanupRules;
         private readonly Dictionary<string, Regex> _parsingPatterns;
         private readonly Regex _tokenizer;
 
-        public ExerciseService()
+        public ExerciseService(ICurrentUserService currentUser)
         {
+            _currentUser = currentUser;
             _cleanupRules = RegexPatterns.LoadConfigs("regexParsing.json", "Cleanup");
             _parsingPatterns = RegexPatterns.LoadLookup("regexParsing.json", "Parsing");
             _tokenizer = RegexPatterns.LoadLookup("lexerPatterns.json")["Tokenize"];
         }
         [Authorize]
-        public async Task<Exercise> SaveFromText(string rawText, ObjectId userId, DateTimeOffset noteDate, ObjectId? id = null)
+        public async Task<Exercise> SaveFromText(string rawText, DateTimeOffset noteDate, ObjectId? id = null)
         {
+            var userId = await _currentUser.GetUserIdAsync();
+            if (userId == null)
+                throw new UnauthorizedAccessException("User must be logged in to save an exercise.");
 
             var cleanText = rawText.ToLowerInvariant();
             foreach (var rule in _cleanupRules)
@@ -46,7 +53,7 @@ namespace Noting.Services
                 Id = id ?? ObjectId.GenerateNewId(),
                 RawText = rawText.Trim(),
                 Date = noteDate,
-                UserId = userId,
+                UserId = userId.Value,
                 NameTag = parsed.Name,
                 Weight = parsed.Weight,
                 Reps = parsed.Reps.Select(r => new RepEntry(r)).ToList(),
@@ -77,10 +84,10 @@ namespace Noting.Services
 
             var result = await col.DeleteOneAsync(filter);
         }
-        public async Task<List<Exercise>> GetAllForCurrentUser(ClaimsPrincipal user)
+        public async Task<List<Exercise>> GetAllForCurrentUser()
         {
-            var userIdString = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!ObjectId.TryParse(userIdString, out var userId))
+            var userId = await _currentUser.GetUserIdAsync();
+            if (userId == null)
                 return new List<Exercise>();
 
             return await DatabaseManipulator
@@ -88,6 +95,23 @@ namespace Noting.Services
                 .Find(e => e.UserId == userId)
                 .SortByDescending(e => e.Date)
                 .ToListAsync();
+        }
+        public async Task<List<Exercise>> GetSameNameExercises(string exerciseName)
+        {
+            var userId = await _currentUser.GetUserIdAsync();
+            if (userId == null)
+                return new List<Exercise>();
+
+            var collection = DatabaseManipulator.Collection<Exercise>();
+
+            var exercise = await collection
+                .Find(e => e.UserId == userId && e.NameTag == exerciseName)
+                .ToListAsync();
+
+            if (exercise == null)
+                return new List<Exercise>();
+
+            return exercise;
         }
         public ParsedExercise ParseTokens(List<Token> tokens)
         {
@@ -181,10 +205,16 @@ namespace Noting.Services
                         }
                         else if (repNumbers.Count == 2)
                         {
-                            var (sets, r) = DisambiguateTwoNumbers(repNumbers[0], repNumbers[1]);
-                            repsPerSet = Enumerable.Repeat(r, sets).ToList();
-                        } 
-                        else
+                            if (IsProbablySetXRep(repNumbers[0], repNumbers[1]))
+                            {
+                                var (sets, r) = DisambiguateTwoNumbers(repNumbers[0], repNumbers[1]);
+                                repsPerSet = Enumerable.Repeat(r, sets).ToList();
+                            }
+                            else
+                            {
+                                repsPerSet = repNumbers;
+                            }
+                        } else
                         {
                             repsPerSet = repNumbers.ToList();
                         }
@@ -301,6 +331,14 @@ namespace Noting.Services
                 return (b, a);
 
             return (a, b);
+        }
+        private bool IsProbablySetXRep(int a, int b)
+        {
+            const int maxSets = 6;
+            const int maxReps = 30;
+
+            return (a <= maxSets && b <= maxReps && b > a)
+                || (b <= maxSets && a <= maxReps && a > b);
         }
         public class ParsedExercise
         {
