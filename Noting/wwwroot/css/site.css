@@ -528,6 +528,12 @@
   .mt-auto {
     margin-top: auto;
   }
+  .mr-4 {
+    margin-right: calc(var(--spacing) * 4);
+  }
+  .mr-6 {
+    margin-right: calc(var(--spacing) * 6);
+  }
   .mb-0 {
     margin-bottom: calc(var(--spacing) * 0);
   }
@@ -552,8 +558,14 @@
   .mb-14 {
     margin-bottom: calc(var(--spacing) * 14);
   }
+  .mb-46 {
+    margin-bottom: calc(var(--spacing) * 46);
+  }
   .mb-auto {
     margin-bottom: auto;
+  }
+  .ml-4 {
+    margin-left: calc(var(--spacing) * 4);
   }
   .\!hidden {
     display: none !important;
@@ -713,6 +725,9 @@
   }
   .border-collapse {
     border-collapse: collapse;
+  }
+  .rotate-180 {
+    rotate: 180deg;
   }
   .transform {
     transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);
