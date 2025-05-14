@@ -32,17 +32,17 @@
                     <div class="@($"inline-flex items-center gap-1 {ColorClass}")">
                         <p>@AvgWeight kg</p>
                         <svg class="@($"w-3 h-3 align-middle transform {RotationClass}")"
-                             viewBox="0 0 6 6"
-                             fill="currentColor"
-                             xmlns="http://www.w3.org/2000/svg">
+                        viewBox="0 0 6 6"
+                        fill="currentColor"
+                        xmlns="http://www.w3.org/2000/svg">
                             <path fill-rule="evenodd" clip-rule="evenodd"
-                                  d="M2.44321 2.98483C2.58966 2.83839 2.82709 2.83839 2.97354 2.98483L4.47354 4.48483C4.61999 4.63128 4.61999 4.86872 4.47354 5.01516C4.32709 5.16161 4.08966 5.16161 3.94321 5.01516L2.70837 3.78033L1.47354 5.01516C1.32709 5.16161 1.08966 5.16161 0.943209 5.01516C0.796762 4.86872 0.796762 4.63128 0.943209 4.48484L2.44321 2.98483Z" />
+                            d="M2.44321 2.98483C2.58966 2.83839 2.82709 2.83839 2.97354 2.98483L4.47354 4.48483C4.61999 4.63128 4.61999 4.86872 4.47354 5.01516C4.32709 5.16161 4.08966 5.16161 3.94321 5.01516L2.70837 3.78033L1.47354 5.01516C1.32709 5.16161 1.08966 5.16161 0.943209 5.01516C0.796762 4.86872 0.796762 4.63128 0.943209 4.48484L2.44321 2.98483Z" />
                             <path fill-rule="evenodd" clip-rule="evenodd"
-                                  d="M2.32532 0.146447C2.53685 -0.0488155 2.87982 -0.0488155 3.09135 0.146447L5.25802 2.14645C5.46955 2.34171 5.46955 2.65829 5.25802 2.85355C5.04648 3.04882 4.70352 3.04882 4.49198 2.85355L2.70833 1.20711L0.924683 2.85355C0.713149 3.04882 0.370184 3.04882 0.158651 2.85355C-0.0528835 2.65829 -0.0528835 2.34171 0.15865 2.14645L2.32532 0.146447Z" />
+                            d="M2.32532 0.146447C2.53685 -0.0488155 2.87982 -0.0488155 3.09135 0.146447L5.25802 2.14645C5.46955 2.34171 5.46955 2.65829 5.25802 2.85355C5.04648 3.04882 4.70352 3.04882 4.49198 2.85355L2.70833 1.20711L0.924683 2.85355C0.713149 3.04882 0.370184 3.04882 0.158651 2.85355C-0.0528835 2.65829 -0.0528835 2.34171 0.15865 2.14645L2.32532 0.146447Z" />
                         </svg>
                     </div>
                 </div>
-                <div class="bg-black w-full h-4"></div>
+                <div class="bg-surface-dark w-full h-4"></div>
             </div>
         </div>
     </div>
@@ -60,13 +60,35 @@
     private int LowestWeight;
     private double AvgWeight;
 
-    private bool IsUp => LatestWeight > LowestWeight;
-    private string ColorClass => IsUp ? "text-[#03B409]" : "text-[#B40303]";
-    private string RotationClass => IsUp ? "" : "rotate-180";
-
     private int[] WeightData;
     private int[] RepsData;
     private string[] DateData;
+
+    private enum WeightTrend
+    {
+        Down,
+        Even,
+        Up
+    }
+    private string RotationClass => Trend switch
+    {
+        WeightTrend.Down => "rotate-180",
+        WeightTrend.Up => "",
+        _ => "hidden"
+    };
+
+    private string ColorClass => Trend switch
+    {
+        WeightTrend.Up => "text-[#03B409]",
+        WeightTrend.Down => "text-[#B40303]",
+        WeightTrend.Even => ""
+    };
+
+    private WeightTrend Trend =>
+    LatestWeight > LowestWeight ? WeightTrend.Up :
+	LatestWeight < LowestWeight ? WeightTrend.Down : 
+    WeightTrend.Even;
+
 
     protected override async Task OnInitializedAsync()
     {

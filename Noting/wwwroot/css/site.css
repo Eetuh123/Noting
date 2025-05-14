@@ -528,9 +528,6 @@
   .mt-auto {
     margin-top: auto;
   }
-  .mr-4 {
-    margin-right: calc(var(--spacing) * 4);
-  }
   .mr-6 {
     margin-right: calc(var(--spacing) * 6);
   }
@@ -557,9 +554,6 @@
   }
   .mb-14 {
     margin-bottom: calc(var(--spacing) * 14);
-  }
-  .mb-46 {
-    margin-bottom: calc(var(--spacing) * 46);
   }
   .mb-auto {
     margin-bottom: auto;
@@ -968,6 +962,9 @@
   }
   .bg-red-500 {
     background-color: var(--color-red-500);
+  }
+  .bg-surface-dark {
+    background-color: var(--color-surface-dark);
   }
   .bg-surface-main {
     background-color: var(--color-surface-main);

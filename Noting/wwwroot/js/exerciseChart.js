@@ -15,6 +15,13 @@
         config.options.scales.y2.ticks.callback = r => r + 'reps';
         config.options.scales.y2.position = 'right';
 
+        config.options.elements = config.options.elements || {};
+        config.options.elements.line = config.options.elements.line || {};
+        config.options.elements.point = config.options.elements.point || {};
+        config.options.elements.line.backgroundColor = '#1A1A1A';
+        config.options.elements.point.backgroundColor = '#1A1A1A';
+        config.options.elements.point.pointBorderColor = '#1A1A1A';
+
         window.exerciseChart._charts[canvasId] = new Chart(ctx, config);
     },
 
