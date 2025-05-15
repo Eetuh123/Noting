@@ -13,11 +13,12 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
-    <div class="font-raleway">
+    <div class="font-raleway bg-surface-main">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
+    <script src="~/js/floating-labels.js" asp-append-version="true"></script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @if (User.Identity.IsAuthenticated)
