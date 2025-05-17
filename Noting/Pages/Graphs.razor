@@ -1,15 +1,18 @@
 ﻿@page "/graphs"
 @using Noting.Services
+@implements IDisposable
+@inject WorkoutNoteService NoteService
 @inject ExerciseService ExerciseService
 @inject AuthenticationStateProvider AuthStateProv
+@inject SearchState SearchState
 @layout MainLayout
 
 
-    <div class="border-b-2 alig border-divider mx-8 text-center font-semibold">
+<div class="border-b-2 alig border-divider mx-8 text-center font-semibold">
     <div class="text-center text-2xl font-semibold focus:outline-none pb-4"
-    <h1>Charts</h1>
+        <h1>Charts</h1>
     </div>
-    </div>
+</div>
 <div class="space-y-6 px-4 sm:px-6 lg:px-8 py-6">
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -28,16 +31,41 @@
 </div>
 
 @code {
-    private List<string>? _exerciseNames;
+    private List<Exercise> _allExercises;
+    private List<WorkoutNote> _allNotes;
+    private List<string> _exerciseNames;
 
     protected override async Task OnInitializedAsync()
     {
         var user = (await AuthStateProv.GetAuthenticationStateAsync()).User;
-        var entries = await ExerciseService.GetAllForCurrentUser();
-        _exerciseNames = entries
+        _allExercises = await ExerciseService.GetAllForCurrentUser();
+        _allNotes = await NoteService.GetNotesForUserAsync();
+
+        SearchState.OnChange += ReapplyFilters;
+
+        ReapplyFilters();
+
+    }
+    private void ReapplyFilters()
+    {
+        var crit = SearchState.Current;
+
+        var filtered = SearchService.FilterExercisesByNoteName(
+          _allExercises,
+          _allNotes,
+          crit
+        );
+
+        _exerciseNames = filtered
           .Select(e => e.NameTag)
           .Distinct(StringComparer.OrdinalIgnoreCase)
           .OrderBy(n => n)
           .ToList();
+
+        InvokeAsync(StateHasChanged);
+    }
+    public void Dispose()
+    {
+        SearchState.OnChange -= ReapplyFilters;
     }
 }

@@ -4,11 +4,13 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using MongoDB.Bson
 @using System.Security.Claims
+
 @inject WorkoutNoteService NoteService
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager NavManager
 @inject IJSRuntime JS
 @inject AppState AppState
+@inject SearchState SearchState
 
 <nav class="mb-4 border-b-2 border-divider w-full bg-surface-main">
     <ul class="flex space-x-4 justify-center my-2">
@@ -83,7 +85,8 @@
     <div class="fixed inset-0" @onclick="ToggleSearch"></div>
     <div class="absolute inset-0 m-auto h-fit z-20" @onclick:stopPropagation>
         <div class="max-w-xl mx-auto">
-            <SearchBar OnSearchChanged="ApplyFilters" />
+            <SearchBar InitialTerms="SearchState.Current.Tags"
+                       OnSearchChanged="OnRawSearchChanged" />
         </div>
     </div>
 }
@@ -133,6 +136,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        SearchState.OnChange += OnSearchStateChanged;
         NavManager.LocationChanged += HandleLocationChanged;
         AppState.NotesChanged += OnNotesChanged;
         await LoadNotes();
@@ -142,8 +146,7 @@
         if (!ObjectId.TryParse(idStr, out var userId))
             return;
 
-
-        var notes = await NoteService.GetNotesForUserAsync(userId);
+        var notes = await NoteService.GetNotesForUserAsync();
         var latest = notes.OrderByDescending(n => n.Date).FirstOrDefault();
 
         if (latest == null)
@@ -173,13 +176,8 @@
 
     private async Task LoadNotes()
     {
-        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
-        var idStr = auth.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!ObjectId.TryParse(idStr, out var userId))
-            return;
-        _userId = userId;
-
-        _allNotes = await NoteService.GetNotesForUserAsync(_userId);
+        _allNotes = await NoteService.GetNotesForUserAsync();
+        ApplySearchFilter();
         Sections = BuildSections(_allNotes);
     }
 
@@ -199,70 +197,37 @@
 
         note = NoteService.SaveNote(note);
 
-        _allNotes = await NoteService.GetNotesForUserAsync(_userId);
+        _allNotes = await NoteService.GetNotesForUserAsync();
         Sections = BuildSections(_allNotes);
 
         NavManager.NavigateTo($"/note/{note.Id}");
     }
-
-    private void ApplyFilters(List<string> terms)
+    private void ApplySearchFilter()
     {
+        var criteria = SearchState.Current;
 
-        var query = _allNotes.AsEnumerable();
+        bool hasAny = criteria.Tags.Any()
+                   || !string.IsNullOrWhiteSpace(criteria.Name)
+                   || criteria.FullDates.Any()
+                   || criteria.PartialDates.Any()
+                   || criteria.DateFrom.HasValue
+                   || criteria.DateTo.HasValue
+                   || criteria.Date.HasValue;
 
-        var fullDates = new List<DateTime>();
-        var partialDates = new List<(int Day, int Month)>();
-        var excludeRaws = new List<string>();
+        var source = hasAny
+          ? SearchService.FilterBy(
+              _allNotes,
+              criteria,
+              note => note.Date,
+              note => note.NameTag,
+              note => note.NoteText
+            )
+          : _allNotes;
 
-        foreach (var t in terms)
-        {
-            var parts = t.Split(new[] { '/', '.' }, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 3
-                && int.TryParse(parts[0], out var d1)
-                && int.TryParse(parts[1], out var m1)
-                && int.TryParse(parts[2], out var y1))
-            {
-                fullDates.Add(new DateTime(y1, m1, d1));
-                excludeRaws.Add(t);
-            }
-            else if (parts.Length == 2
-                && int.TryParse(parts[0], out var d2)
-                && int.TryParse(parts[1], out var m2))
-            {
-                partialDates.Add((d2, m2));
-                excludeRaws.Add(t);
-            }
-        }
 
-        foreach (var dt in fullDates.Distinct())
-            query = query.Where(n => n.Date.Date == dt.Date);
-
-        foreach (var dm in partialDates.Distinct())
-            query = query.Where(n => n.Date.Day == dm.Day && n.Date.Month == dm.Month);
-
-        var textTokens = terms
-            .Where(t => !excludeRaws.Contains(t, StringComparer.OrdinalIgnoreCase))
-            .Distinct(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var token in textTokens)
-        {
-            query = query.Where(n =>
-
-                (!string.IsNullOrEmpty(n.NameTag) &&
-                 n.NameTag.Contains(token, StringComparison.OrdinalIgnoreCase))
-                ||
-
-                (!string.IsNullOrEmpty(n.NoteText) &&
-                 n.NoteText
-                   .Split(new[] { ' ', '\r', '\n', '\t', ',', '.', ';', ':' },
-                          StringSplitOptions.RemoveEmptyEntries)
-                   .Any(w => string.Equals(w, token, StringComparison.OrdinalIgnoreCase)))
-            );
-        }
-
-        Sections = BuildSections(query.ToList());
-        StateHasChanged();
+        Sections = BuildSections(source);
     }
+
     private List<Section> BuildSections(List<WorkoutNote> notes)
     {
         var sections = new List<Section>();
@@ -301,6 +266,18 @@
         return sections;
     }
 
+    private void OnRawSearchChanged(List<string> terms)
+    {
+        var crit = SearchService.BuildCriteria(terms);
+        SearchState.Update(crit);
+    }
+       private void OnSearchStateChanged()
+      {
+        ApplySearchFilter();
+        InvokeAsync(StateHasChanged);
+      }
+
+
     private void ToggleSearch() => _isSearchVisible = !_isSearchVisible;
 
     private void HandleLocationChanged(object? _, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs __)
@@ -308,6 +285,7 @@
 
     public void Dispose()
     {
+        SearchState.OnChange -= OnSearchStateChanged;
         NavManager.LocationChanged -= HandleLocationChanged;
         AppState.NotesChanged -= OnNotesChanged;
     }

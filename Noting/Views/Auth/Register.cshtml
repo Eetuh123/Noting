@@ -19,7 +19,7 @@
             <div class="relative">
                 @Html.TextBoxFor(u => u.Email, new
                     {
-                        @class = "peer w-full px-4 py-2 placeholder-opacity-0 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-highlight focus:border-transparent",
+                        @class = "peer w-full px-4 py-2 placeholder:opacity-0 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-highlight focus:border-transparent",
                         id = "email",
                         placeholder = "Email"
                     })
@@ -36,7 +36,7 @@
             <div class="relative mt-4">
                 @Html.TextBoxFor(u => u.Name, new
                     {
-                        @class = "peer w-full px-4 py-2 placeholder-opacity-0 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-highlight focus:border-transparent",
+                        @class = "peer w-full px-4 py-2 placeholder:opacity-0 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-highlight focus:border-transparent",
                         id = "name",
                         placeholder = "Name"
                     })
@@ -53,7 +53,7 @@
             <div class="relative mt-4">
                 @Html.PasswordFor(u => u.PasswordHash, new
                     {
-                        @class = "peer w-full px-4 py-2 placeholder-opacity-0 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-highlight focus:border-transparent",
+                        @class = "peer w-full px-4 py-2 placeholder:opacity-0 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-highlight focus:border-transparent",
                         id = "password",
                         placeholder = "Password"
                     })

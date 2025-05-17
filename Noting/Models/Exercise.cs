@@ -18,6 +18,7 @@ namespace Noting.Models
 
         public required DateTimeOffset Date { get; set; }
         public required string RawText { get; set; }
+        public ObjectId ParentNoteId { get; set; }
 
         public bool TrySetCurrentUserId(ClaimsPrincipal user)
         {

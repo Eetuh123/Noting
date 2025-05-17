@@ -67,7 +67,7 @@ namespace Noting.Controllers
 
             await SignInUserAsync(existingUser);
 
-            var latest = (await _noteService.GetNotesForUserAsync(existingUser.Id))
+            var latest = (await _noteService.GetNotesForUserAsync())
                  .OrderByDescending(n => n.Date)
                  .FirstOrDefault();
 

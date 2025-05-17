@@ -2,7 +2,6 @@
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Noting.Models;
-using System.Security.Claims;
 using System.Text.RegularExpressions;
 
 namespace Noting.Services
@@ -24,7 +23,7 @@ namespace Noting.Services
             _tokenizer = RegexPatterns.LoadLookup("lexerPatterns.json")["Tokenize"];
         }
         [Authorize]
-        public async Task<Exercise> SaveFromText(string rawText, DateTimeOffset noteDate, ObjectId? id = null)
+        public async Task<Exercise> SaveFromText(string rawText, DateTimeOffset noteDate, ObjectId noteId, ObjectId? id = null)
         {
             var userId = await _currentUser.GetUserIdAsync();
             if (userId == null)
@@ -57,7 +56,8 @@ namespace Noting.Services
                 NameTag = parsed.Name,
                 Weight = parsed.Weight,
                 Reps = parsed.Reps.Select(r => new RepEntry(r)).ToList(),
-                Notes = parsed.Notes
+                Notes = parsed.Notes,
+                ParentNoteId = noteId,
             };
 
             await DatabaseManipulator

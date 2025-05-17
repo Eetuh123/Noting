@@ -98,7 +98,7 @@ else
     }
     private async Task CountNotes()
     {
-        var all = await NoteService.GetNotesForUserAsync(UserId);
+        var all = await NoteService.GetNotesForUserAsync();
         _totalNotes = all.Count;
     }
     private async Task OnDeleteCurrentNote()
@@ -109,7 +109,7 @@ else
             SaveStatus = "Cannot delete the last remaining note.";
             return;
         }
-        var notes = (await NoteService.GetNotesForUserAsync(UserId))
+        var notes = (await NoteService.GetNotesForUserAsync())
                         .OrderByDescending(n => n.Date)
                         .ToList();
 
@@ -181,6 +181,7 @@ else
             var ex = await ExerciseService.SaveFromText(
                 lines[i],
                 CurrentNote.Date,
+                CurrentNote.Id,
                 existingId);
             newIds.Add(ex.Id);
         }
