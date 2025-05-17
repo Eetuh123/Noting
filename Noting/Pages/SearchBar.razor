@@ -26,25 +26,36 @@
 
 @code {
     [Parameter] public EventCallback<List<string>> OnSearchChanged { get; set; }
+    [Parameter] public List<string> InitialTerms { get; set; }
 
     private List<string> Terms = new();
-    private string CurrentEntry;
+    private string CurrentEntry = "";
+
+    protected override void OnParametersSet()
+    {
+        Terms = InitialTerms?.ToList() ?? new List<string>();
+    }
+
+    protected override void OnInitialized()
+    {
+        Terms = InitialTerms.ToList();
+    }
 
     private void OnKeyDown(KeyboardEventArgs e)
     {
         if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(CurrentEntry))
         {
-            var term = CurrentEntry.Trim();
-            if (!Terms.Contains(term))
-                Terms.Add(term);
+            var t = CurrentEntry.Trim();
+            if (!Terms.Contains(t, StringComparer.OrdinalIgnoreCase))
+                Terms.Add(t);
             CurrentEntry = "";
             OnSearchChanged.InvokeAsync(Terms.ToList());
         }
     }
 
-    private void RemoveTerm(string term)
+    private void RemoveTerm(string t)
     {
-        Terms.Remove(term);
+        Terms.RemoveAll(x => x.Equals(t, StringComparison.OrdinalIgnoreCase));
         OnSearchChanged.InvokeAsync(Terms.ToList());
     }
 }

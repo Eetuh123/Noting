@@ -6,6 +6,11 @@ namespace Noting.Services
 {
     public class WorkoutNoteService
     {
+        private readonly ICurrentUserService _currentUser;
+        public WorkoutNoteService(ICurrentUserService currentUser)
+        {
+            _currentUser = currentUser;
+        }
         public WorkoutNote GetNote(ObjectId userId, string tag, DateTime date)
         {
 
@@ -25,8 +30,12 @@ namespace Noting.Services
         {
             return DatabaseManipulator.Save(note);
         }
-        public async Task<List<WorkoutNote>> GetNotesForUserAsync(ObjectId userId)
+        public async Task<List<WorkoutNote>> GetNotesForUserAsync()
         {
+            var userId = await _currentUser.GetUserIdAsync();
+            if (userId == null)
+                return new List<WorkoutNote>();
+
             return await DatabaseManipulator
                 .database
                 .GetCollection<WorkoutNote>(nameof(WorkoutNote))
