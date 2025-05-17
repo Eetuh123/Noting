@@ -67,9 +67,10 @@ namespace Noting.Controllers
 
             await SignInUserAsync(existingUser);
 
-            var latest = (await _noteService.GetNotesForUserAsync())
-                 .OrderByDescending(n => n.Date)
-                 .FirstOrDefault();
+            var notes = await _noteService.GetNotesForUserAsync();
+            var latest = notes
+                .OrderByDescending(n => n.Date)
+                .FirstOrDefault();
 
             if (latest == null)
             {
@@ -89,6 +90,10 @@ namespace Noting.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RegisterUser(User user)
         {
+            if (!ModelState.IsValid)
+            {
+                return View("Register", user);
+            }
             var collection = DatabaseManipulator.database?
                 .GetCollection<User>("User");
 

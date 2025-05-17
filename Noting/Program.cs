@@ -42,7 +42,8 @@ builder.Services.AddScoped<ExerciseService>();
 builder.Services.AddScoped<WorkoutNoteService>();
 builder.Services.AddScoped<AppState>();
 builder.Services.AddScoped<SearchState>();
-builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<ICurrentUserService, MvcCurrentUserService>();
+builder.Services.AddScoped<BlazorCurrentUserService>();
 
 builder.Services.AddApexCharts();
 builder.Services.AddApplicationInsightsTelemetry();

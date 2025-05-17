@@ -37,7 +37,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var user = (await AuthStateProv.GetAuthenticationStateAsync()).User;
         _allExercises = await ExerciseService.GetAllForCurrentUser();
         _allNotes = await NoteService.GetNotesForUserAsync();
 
@@ -48,12 +47,12 @@
     }
     private void ReapplyFilters()
     {
-        var crit = SearchState.Current;
+        var criteria = SearchState.Current;
 
         var filtered = SearchService.FilterExercisesByNoteName(
           _allExercises,
           _allNotes,
-          crit
+          criteria
         );
 
         _exerciseNames = filtered

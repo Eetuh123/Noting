@@ -45,9 +45,10 @@ namespace NotingTesting.Services
             // Arrange input
             var rawText = "bench press 50kg 6x5 cool";
             var noteDate = DateTimeOffset.UtcNow;
+            var noteId = ObjectId.GenerateNewId();
 
             // Act
-            var result = await service.SaveFromText(rawText, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate, noteId);
 
             // Assert parsing fields
             Assert.Equal("bench press", result.NameTag);
@@ -88,8 +89,9 @@ namespace NotingTesting.Services
 
             var rawText = "50kg bench press 5x5 cool";
             var noteDate = DateTimeOffset.UtcNow;
+            var noteId = ObjectId.GenerateNewId();
 
-            var result = await service.SaveFromText(rawText, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate, noteId);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);
@@ -127,8 +129,9 @@ namespace NotingTesting.Services
 
             var rawText = "50 bench press 12x15 cool";
             var noteDate = DateTimeOffset.UtcNow;
+            var noteId = ObjectId.GenerateNewId();
 
-            var result = await service.SaveFromText(rawText, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate, noteId);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);
@@ -165,8 +168,9 @@ namespace NotingTesting.Services
 
             var rawText = "50 bench press 2x8 cool";
             var noteDate = DateTimeOffset.UtcNow;
+            var noteId = ObjectId.GenerateNewId();
 
-            var result = await service.SaveFromText(rawText, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate, noteId);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);
@@ -203,8 +207,9 @@ namespace NotingTesting.Services
 
             var rawText = "50 bench press 8 2 cool";
             var noteDate = DateTimeOffset.UtcNow;
+            var noteId = ObjectId.GenerateNewId();
 
-            var result = await service.SaveFromText(rawText, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate, noteId);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);
@@ -241,8 +246,9 @@ namespace NotingTesting.Services
 
             var rawText = "50kg bench press 8 8 8 cool";
             var noteDate = DateTimeOffset.UtcNow;
+            var noteId = ObjectId.GenerateNewId();
 
-            var result = await service.SaveFromText(rawText, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate, noteId);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);
@@ -279,8 +285,9 @@ namespace NotingTesting.Services
 
             var rawText = "50 bench press 8 8 8 cool";
             var noteDate = DateTimeOffset.UtcNow;
+            var noteId = ObjectId.GenerateNewId();
 
-            var result = await service.SaveFromText(rawText, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate, noteId);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);
@@ -317,8 +324,9 @@ namespace NotingTesting.Services
 
             var rawText = "50 bench press 8x8x8 cool";
             var noteDate = DateTimeOffset.UtcNow;
+            var noteId = ObjectId.GenerateNewId();
 
-            var result = await service.SaveFromText(rawText, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate, noteId);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);
@@ -355,8 +363,9 @@ namespace NotingTesting.Services
 
             var rawText = "bench press 8 8 8 50 cool";
             var noteDate = DateTimeOffset.UtcNow;
+            var noteId = ObjectId.GenerateNewId();
 
-            var result = await service.SaveFromText(rawText, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate, noteId);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);
@@ -393,8 +402,9 @@ namespace NotingTesting.Services
 
             var rawText = "bench press 50 8/8/8 cool";
             var noteDate = DateTimeOffset.UtcNow;
+            var noteId = ObjectId.GenerateNewId();
 
-            var result = await service.SaveFromText(rawText, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate, noteId);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);
@@ -429,11 +439,11 @@ namespace NotingTesting.Services
 
             var service = CreateServiceWithMocks(out var mockCollection, mockUser);
 
-
             var rawText = "50 bench press 10x12x10";
             var noteDate = DateTimeOffset.UtcNow;
+            var noteId = ObjectId.GenerateNewId();
 
-            var result = await service.SaveFromText(rawText, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate, noteId);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);
@@ -470,8 +480,9 @@ namespace NotingTesting.Services
 
             var rawText = "bench press 8/8/8 50 cool";
             var noteDate = DateTimeOffset.UtcNow;
+            var noteId = ObjectId.GenerateNewId();
 
-            var result = await service.SaveFromText(rawText, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate, noteId);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);
@@ -508,8 +519,9 @@ namespace NotingTesting.Services
 
             var rawText = "bench press 8/8/8 cool";
             var noteDate = DateTimeOffset.UtcNow;
+            var noteId = ObjectId.GenerateNewId();
 
-            var result = await service.SaveFromText(rawText, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate, noteId);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(0, result.Weight);
@@ -546,8 +558,9 @@ namespace NotingTesting.Services
 
             var rawText = "bench press 8 8 8 cool";
             var noteDate = DateTimeOffset.UtcNow;
+            var noteId = ObjectId.GenerateNewId();
 
-            var result = await service.SaveFromText(rawText, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate, noteId);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(0 ,result.Weight);
@@ -584,8 +597,9 @@ namespace NotingTesting.Services
 
             var rawText = "bench press 50kg 5x6";
             var noteDate = DateTimeOffset.UtcNow;
+            var noteId = ObjectId.GenerateNewId();
 
-            var result = await service.SaveFromText(rawText, noteDate);
+            var result = await service.SaveFromText(rawText, noteDate, noteId);
 
             Assert.Equal("bench press", result.NameTag);
             Assert.Equal(50, result.Weight);

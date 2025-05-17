@@ -27,10 +27,10 @@ namespace Noting.Models
         public static T Save<T>(T record) where T : IMongoDocument
         {
 
-            var collection = database.GetCollection<T>(typeof(T).Name);
+            var collection = database?.GetCollection<T>(typeof(T).Name);
             var filter = Builders<T>.Filter.Eq("Id", record.Id);
 
-            collection.ReplaceOne(filter, record, new ReplaceOptions { IsUpsert = true });
+            collection?.ReplaceOne(filter, record, new ReplaceOptions { IsUpsert = true });
             return record;
 
         }
