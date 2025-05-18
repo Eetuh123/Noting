@@ -8,19 +8,17 @@
 @layout MainLayout
 
 
-<div class="border-b-2 alig border-divider mx-8 text-center font-semibold">
-    <div class="text-center text-2xl font-semibold focus:outline-none pb-4"
+<div class="border-b-2 alig border-divider mx-2 md:mx-8 text-center font-semibold">
+    <div class="text-center text-2xl font-semibold focus:outline-none pb-4">
         <h1>Charts</h1>
     </div>
 </div>
 <div class="space-y-6 px-4 sm:px-6 lg:px-8 py-6">
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="h-[400px] w-[400px]">
+    <div class="grid grid-cols-1">
             <ExerciseTable />
-        </div>
     </div>
-    <div class="grid grid-cols-2 gap-4 justify-items-center">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 justify-items-center">
         @foreach (var name in _exerciseNames ?? Enumerable.Empty<string>())
         {
             <div class="w-full">

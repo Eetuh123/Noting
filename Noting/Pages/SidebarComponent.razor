@@ -68,7 +68,7 @@
         </li>
         <!-- Search -->
         <li class="flex justify-center items-center">
-            <button @onclick="ToggleSearch" class="hover:cursor-pointer hover:bg-hover-color p-2 rounded-xl flex justify-center duration-150 active:scale-95 active:ease-out items-center @(_isSearchVisible ? "bg-[#CACACA]" : "")">
+            <button @onclick:stopPropagation @onclick="SearchState.ToggleOverlay" class="hover:cursor-pointer hover:bg-hover-color p-2 rounded-xl flex justify-center duration-150 active:scale-95 active:ease-out items-center @(_isSearchVisible ? "bg-[#CACACA]" : "")">
                 <svg xmlns="http://www.w3.org/2000/svg"
                 class="w-6 h-6 fill-highlight"
                 fill="currentColor"
@@ -80,16 +80,6 @@
     </ul>
 </nav>
 
-@if (_isSearchVisible)
-{
-    <div class="fixed inset-0" @onclick="ToggleSearch"></div>
-    <div class="absolute inset-0 m-auto h-fit z-20" @onclick:stopPropagation>
-        <div class="max-w-xl mx-auto">
-            <SearchBar InitialTerms="SearchState.Current.Tags"
-            OnSearchChanged="OnRawSearchChanged" />
-        </div>
-    </div>
-}
 
 <div class="h-screen overflow-y-auto bg-surface-main p-2 w-full">
     @if (!Sections.Any())
@@ -101,12 +91,11 @@
         @foreach (var part in Sections)
         {
             <div class="mb-6">
-                <!-- Section header -->
+
                 <h5 class="px-4 py-2 text-2xl font-semibold uppercase">
                     @part.Title
                 </h5>
 
-                <!-- Card wrapper for this section -->
                 <div class="bg-[#F6F6F6] shadow rounded-md divide-y divide-gray-200 overflow-hidden">
                     @foreach (var note in part.Notes)
                     {
@@ -268,18 +257,11 @@
 
         return sections;
     }
-
-    private void OnRawSearchChanged(List<string> terms)
-    {
-        var criteria = SearchService.BuildCriteria(terms);
-        SearchState.Update(criteria);
-    }
        private void OnSearchStateChanged()
       {
         ApplySearchFilter();
         InvokeAsync(StateHasChanged);
       }
-
 
     private void ToggleSearch() => _isSearchVisible = !_isSearchVisible;
 

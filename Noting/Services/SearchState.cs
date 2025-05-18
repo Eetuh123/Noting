@@ -7,6 +7,9 @@ namespace Noting.Services
         private SearchCriteria _current = new();
         public event Action OnChange;
 
+        public bool IsOverlayVisible { get; private set; }
+        public event Action? OnToggle;
+
         public SearchCriteria Current => _current;
 
         public void Update(SearchCriteria criteria)
@@ -22,6 +25,11 @@ namespace Noting.Services
                 Date = criteria.Date
             };
             OnChange?.Invoke();
+        }
+        public void ToggleOverlay()
+        {
+            IsOverlayVisible = !IsOverlayVisible;
+            OnToggle?.Invoke();
         }
 
         public void Dispose() => OnChange = null;

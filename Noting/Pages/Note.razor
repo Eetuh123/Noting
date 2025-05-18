@@ -18,13 +18,13 @@
 }
 else
 {
-    <div class="border-b-2 alig border-divider mx-8 text-center font-semibold">
+    <div class="border-b-2 alig border-divider mx-4 md:mx-8 text-center font-semibold">
     <input class="text-center text-2xl font-semibold focus:outline-none pb-4"
                @bind="Tag"
                @bind:event="oninput"
                @onblur="SaveTag" />
     </div>
-    <div class="mx-8 my-4 relative">
+    <div class="mx-4 md:mx-8 my-4 relative">
     <textarea @bind="NoteText"
               @bind:event="oninput"
               @onblur="SaveNote"
@@ -48,7 +48,7 @@ else
 </div>
 
 <p class="mx-8 text-sm text-gray-500">@SaveStatus</p>
-    <div class="fixed bottom-4 mx-8 mb-14  right-4 flex items-center space-x-4 z-50">
+    <div class="fixed bottom-4 mx-8 mb-14  right-4 flex items-center space-x-4">
         @if (_totalNotes <= 1)
         {
             <p class="text-sm text-gray-600 whitespace-nowrap">

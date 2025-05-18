@@ -1,10 +1,23 @@
 ﻿@inherits LayoutComponentBase
 @inject AuthenticationStateProvider AuthProv
+@inject SearchState SearchState
 @using System.Security.Claims
 
 <AuthorizeView Context="auth">
     <Authorized>
-        <div class="flex h-screen text-surface-dark">
+
+        <div class="flex h-screen text-surface-dark" @onclick="HandleAnyClickOutsideSearch">
+
+            @if (SearchState.IsOverlayVisible)
+            {
+                <div class="fixed inset-0 m-auto h-fit z-60" @onclick:stopPropagation>
+                    <div class="max-w-xl mx-auto">
+                        <SearchBar InitialTerms="SearchState.Current.Tags"
+                                   OnSearchChanged="OnRawSearchChanged" />
+                    </div>
+                </div>
+            }
+
             @if (isSidebarOpen)
             {
                 <div class="fixed inset-0 bg-black/30 z-30"
@@ -17,7 +30,7 @@
             </div>
 
             <div class="flex-1 p-4 overflow-auto">
-                <button class="fixed top-4 left-4 hover:cursor-pointer rounded-xl flex justify-center items-center hover:bg-hover-color duration-150 active:scale-95 active:ease-out"
+                <button class="fixed top-4 left-6 hover:cursor-pointer rounded-xl flex justify-center items-center hover:bg-hover-color duration-150 active:scale-95 active:ease-out"
                         @onclick="ToggleSidebar"
                         aria-label="Toggle menu">
                     <svg xmlns="http://www.w3.org/2000/svg"
@@ -45,6 +58,24 @@
 @code {
     bool isSidebarOpen;
 
+    protected override void OnInitialized()
+    {
+        SearchState.OnChange += StateHasChanged;
+        SearchState.OnToggle += StateHasChanged;
+    }
+
+    private void OnRawSearchChanged(List<string> terms)
+    {
+        var criteria = SearchService.BuildCriteria(terms);
+        SearchState.Update(criteria);
+    }
+
+    void HandleAnyClickOutsideSearch()
+    {
+        if (SearchState.IsOverlayVisible)
+            SearchState.ToggleOverlay();
+    }
+
     void ToggleSidebar()
         => isSidebarOpen = !isSidebarOpen;
 
@@ -54,5 +85,5 @@
             ? "translate-x-0"
             : "-translate-x-full"
         ) +
-        " md:static md:translate-x-0 md:flex md:w-[30%] xl:md:w-1/5";
+        " lg:static lg:translate-x-0 lg:flex lg:w-[30%] xl:lg:w-1/5";
 }

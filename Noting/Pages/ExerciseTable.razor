@@ -64,7 +64,6 @@
           {
               var lastReps = ex.Reps.LastOrDefault()?.Reps ?? 0;
               var volume = ex.Weight * lastReps;
-              // epley formula for 1RM estimate
               var oneRm = lastReps > 0
         ? ex.Weight * (1 + lastReps / 30.0)
         : ex.Weight;
