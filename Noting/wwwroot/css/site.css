@@ -38,8 +38,6 @@
     --container-xl: 36rem;
     --text-sm: 0.875rem;
     --text-sm--line-height: calc(1.25 / 0.875);
-    --text-base: 1rem;
-    --text-base--line-height: calc(1.5 / 1);
     --text-lg: 1.125rem;
     --text-lg--line-height: calc(1.75 / 1.125);
     --text-xl: 1.25rem;
@@ -462,12 +460,6 @@
   }
   .mx-8 {
     margin-inline: calc(var(--spacing) * 8);
-  }
-  .mx-10 {
-    margin-inline: calc(var(--spacing) * 10);
-  }
-  .mx-16 {
-    margin-inline: calc(var(--spacing) * 16);
   }
   .mx-auto {
     margin-inline: auto;
@@ -1618,19 +1610,9 @@
       margin-inline: calc(var(--spacing) * 40);
     }
   }
-  .md\:mx-100 {
-    @media (width >= 48rem) {
-      margin-inline: calc(var(--spacing) * 100);
-    }
-  }
   .md\:w-1\/2 {
     @media (width >= 48rem) {
       width: calc(1/2 * 100%);
-    }
-  }
-  .md\:max-w-md {
-    @media (width >= 48rem) {
-      max-width: var(--container-md);
     }
   }
   .md\:max-w-sm {
@@ -1641,11 +1623,6 @@
   .md\:flex-row {
     @media (width >= 48rem) {
       flex-direction: row;
-    }
-  }
-  .md\:px-20 {
-    @media (width >= 48rem) {
-      padding-inline: calc(var(--spacing) * 20);
     }
   }
   .md\:py-0 {
@@ -1663,11 +1640,6 @@
       position: static;
     }
   }
-  .lg\:mx-10 {
-    @media (width >= 64rem) {
-      margin-inline: calc(var(--spacing) * 10);
-    }
-  }
   .lg\:flex {
     @media (width >= 64rem) {
       display: flex;
@@ -1676,11 +1648,6 @@
   .lg\:w-\[25\%\] {
     @media (width >= 64rem) {
       width: 25%;
-    }
-  }
-  .lg\:w-\[30\%\] {
-    @media (width >= 64rem) {
-      width: 30%;
     }
   }
   .lg\:translate-x-0 {
@@ -1694,24 +1661,9 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
-  .lg\:gap-4 {
-    @media (width >= 64rem) {
-      gap: calc(var(--spacing) * 4);
-    }
-  }
   .lg\:px-8 {
     @media (width >= 64rem) {
       padding-inline: calc(var(--spacing) * 8);
-    }
-  }
-  .lg\:px-40 {
-    @media (width >= 64rem) {
-      padding-inline: calc(var(--spacing) * 40);
-    }
-  }
-  .xl\:gap-4 {
-    @media (width >= 80rem) {
-      gap: calc(var(--spacing) * 4);
     }
   }
   .xl\:lg\:w-1\/5 {
