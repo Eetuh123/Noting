@@ -11,7 +11,7 @@ namespace Noting.Models
         private static MongoServerAddress? address;
         private static MongoClientSettings? settings;
         private static MongoClient? client;
-        public static IMongoDatabase? database;
+        public static IMongoDatabase database;
 
         public static void Initialize(IConfiguration Configuration)
         {
@@ -27,10 +27,10 @@ namespace Noting.Models
         public static T Save<T>(T record) where T : IMongoDocument
         {
 
-            var collection = database.GetCollection<T>(typeof(T).Name);
+            var collection = database?.GetCollection<T>(typeof(T).Name);
             var filter = Builders<T>.Filter.Eq("Id", record.Id);
 
-            collection.ReplaceOne(filter, record, new ReplaceOptions { IsUpsert = true });
+            collection?.ReplaceOne(filter, record, new ReplaceOptions { IsUpsert = true });
             return record;
 
         }

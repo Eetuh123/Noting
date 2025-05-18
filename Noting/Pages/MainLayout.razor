@@ -1,17 +1,51 @@
 ﻿@inherits LayoutComponentBase
 @inject AuthenticationStateProvider AuthProv
+@inject SearchState SearchState
 @using System.Security.Claims
 
 <AuthorizeView Context="auth">
     <Authorized>
-        <div class="flex h-screen text-surface-dark">
-            <!-- Sidebar -->
-            <div class="w-1/5 bg-surface-main border-outline border-r-2 shadow-lg border-divider p-2 flex flex-col items-center space-y-6 text-xl">
+
+        <div class="flex h-screen text-surface-dark" @onclick="HandleAnyClickOutsideSearch">
+
+            @if (SearchState.IsOverlayVisible)
+            {
+                <div class="fixed inset-0 m-auto h-fit z-60" @onclick:stopPropagation>
+                    <div class="max-w-xl mx-auto">
+                        <SearchBar InitialTerms="SearchState.Current.Tags"
+                                   OnSearchChanged="OnRawSearchChanged" />
+                    </div>
+                </div>
+            }
+
+            @if (isSidebarOpen)
+            {
+                <div class="fixed inset-0 bg-black/30 z-30"
+                     @onclick="ToggleSidebar">
+                </div>
+            }
+
+            <div class="@SidebarClasses z-40">
                 <SidebarComponent />
             </div>
 
-            <!-- Main content area -->
             <div class="flex-1 p-4 overflow-auto">
+                <button class="fixed top-4 left-6 hover:cursor-pointer rounded-xl flex justify-center items-center hover:bg-hover-color duration-150 active:scale-95 active:ease-out"
+                        @onclick="ToggleSidebar"
+                        aria-label="Toggle menu">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         class="w-10 h-10 text-highlight"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.5"
+                         viewBox="0 0 24 24">
+                        <rect x="4" y="4" width="15.5" height="16" rx="5" stroke-linejoin="round" />
+                        <path d="M8.444 8.889h3.137" stroke-linecap="round" />
+                        <path d="M8.444 12h6.667" stroke-linecap="round" />
+                        <path d="M8.444 15.111h6.667" stroke-linecap="round" />
+                    </svg>
+                </button>
+
                 @Body
             </div>
         </div>
@@ -20,3 +54,36 @@
         <p>User is NOT authenticated in Blazor.</p>
     </NotAuthorized>
 </AuthorizeView>
+
+@code {
+    bool isSidebarOpen;
+
+    protected override void OnInitialized()
+    {
+        SearchState.OnChange += StateHasChanged;
+        SearchState.OnToggle += StateHasChanged;
+    }
+
+    private void OnRawSearchChanged(List<string> terms)
+    {
+        var criteria = SearchService.BuildCriteria(terms);
+        SearchState.Update(criteria);
+    }
+
+    void HandleAnyClickOutsideSearch()
+    {
+        if (SearchState.IsOverlayVisible)
+            SearchState.ToggleOverlay();
+    }
+
+    void ToggleSidebar()
+        => isSidebarOpen = !isSidebarOpen;
+
+    string SidebarClasses =>
+        "fixed inset-y-0 left-0 w-4/5 bg-surface-main border-outline border-r-2 shadow-lg border-divider p-2 flex flex-col items-center space-y-6 text-xl transform transition-transform duration-200 " +
+        (isSidebarOpen
+            ? "translate-x-0"
+            : "-translate-x-full"
+        ) +
+        " lg:static lg:translate-x-0 lg:flex lg:w-[30%] xl:lg:w-1/5";
+}

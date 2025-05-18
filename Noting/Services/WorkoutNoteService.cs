@@ -1,6 +1,7 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
 using Noting.Models;
+using System.Threading.Tasks;
 
 namespace Noting.Services
 {
@@ -11,21 +12,6 @@ namespace Noting.Services
         {
             _currentUser = currentUser;
         }
-        public WorkoutNote GetNote(ObjectId userId, string tag, DateTime date)
-        {
-
-            var all = DatabaseManipulator.database
-                .GetCollection<WorkoutNote>(nameof(WorkoutNote))
-                .Find(_ => true)
-                .ToList();
-
-            return all
-                .FirstOrDefault(n =>
-                    n.UserId == userId &&
-                    n.NameTag == tag &&
-                    n.Date.Date == date.Date);
-        }
-
         public WorkoutNote SaveNote(WorkoutNote note)
         {
             return DatabaseManipulator.Save(note);

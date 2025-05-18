@@ -6,21 +6,21 @@
 @using System.Security.Claims
 
 @inject WorkoutNoteService NoteService
-@inject AuthenticationStateProvider AuthStateProvider
+@inject ICurrentUserService CurrentUser
 @inject NavigationManager NavManager
 @inject IJSRuntime JS
 @inject AppState AppState
 @inject SearchState SearchState
 
 <nav class="mb-4 border-b-2 border-divider w-full bg-surface-main">
-    <ul class="flex space-x-4 justify-center my-2">
+    <ul class="flex space-x-3 justify-center my-2">
         <!-- Logout -->
         <li class="flex justify-center items-center">
-            <a href="/auth/logout" class="p-2 rounded-xl flex justify-center items-center hover:bg-hover-color duration-300">
+            <a href="/auth/logout" class="hover:cursor-pointer p-2 rounded-xl flex justify-center items-center hover:bg-hover-color duration-150 active:scale-95 active:ease-out">
                 <svg xmlns="http://www.w3.org/2000/svg"
-                     class="w-6 h-6 fill-highlight hover:cursor-pointer"
-                     fill="currentColor"
-                     viewBox="0 0 24 24">
+                class="w-6 h-6 fill-highlight"
+                fill="currentColor"
+                viewBox="0 0 24 24">
                     <path d="m24,15c0,.617-.24,1.197-.678,1.634l-2.072,2.073c-.195.195-.451.293-.707.293s-.512-.098-.707-.293c-.391-.391-.391-1.023,0-1.414l1.292-1.293h-6.128c-.553,0-1-.447-1-1s.447-1,1-1h6.128l-1.292-1.293c-.391-.391-.391-1.023,0-1.414s1.023-.391,1.414,0l2.073,2.074c.437.436.677,1.016.677,1.633ZM6.5,11c-.828,0-1.5.672-1.5,1.5s.672,1.5,1.5,1.5,1.5-.672,1.5-1.5-.672-1.5-1.5-1.5Zm9.5,8v2c0,1.654-1.346,3-3,3H3c-1.654,0-3-1.346-3-3V5.621C0,3.246,1.69,1.184,4.019.718L7.216.079c1.181-.236,2.391.066,3.321.829.375.307.665.685.902,1.092h.561c2.206,0,4,1.794,4,4v5c0,.553-.447,1-1,1s-1-.447-1-1v-5c0-1.103-.897-2-2-2h0s0,0,0,0v17.999h1c.552,0,1-.448,1-1v-2c0-.553.447-1,1-1s1,.447,1,1Zm-6-14.999c0-.602-.267-1.165-.731-1.546-.362-.297-.808-.454-1.266-.454-.131,0-.264.013-.396.039l-3.196.639c-1.397.279-2.411,1.517-2.411,2.942v15.379c0,.552.449,1,1,1h7V4001Z" />
                 </svg>
             </a>
@@ -28,11 +28,11 @@
 
         <!-- New Note -->
         <li class="flex justify-center items-center">
-            <button @onclick="CreateNewNote" class="p-2 rounded-xl flex justify-center items-center hover:bg-hover-color duration-300">
+            <button @onclick="CreateNewNote" class="hover:cursor-pointer p-2 rounded-xl flex justify-center items-center hover:bg-hover-color duration-150 active:scale-95 active:ease-out">
                 <svg xmlns="http://www.w3.org/2000/svg"
-                     class="w-6 h-6 fill-highlight hover:cursor-pointer"
-                     fill="currentColor"
-                     viewBox="0 0 24 24">
+                class="w-6 h-6 fill-highlight"
+                fill="currentColor"
+                viewBox="0 0 24 24">
                     <path d="M18.656.93,6.464,13.122A4.966,4.966,0,0,0,5,16.657V18a1,1,0,0,0,1,1H7.343a4.966,4.966,0,0,0,3.535-1.464L23.07,5.344a3.125,3.125,0,0,0,0-4.414A3.194,3.194,0,0,0,18.656.93Zm3,3L9.464,16.122A3.02,3.02,0,0,1,7.343,17H7v-.343a3.02,3.02,0,0,1,.878-2.121L20.07,2.344a1.148,1.148,0,0,1,1.586,0A1.123,1.123,0,0,1,21.656,3.93Z" />
                     <path d="M23,8.979a1,1,0,0,0-1,1V15H18a3,3,0,0,0-3,3v4H5a3,3,0,0,1-3-3V5A3,3,0,0,1,5,2h9.042a1,1,0,0,0,0-2H5A5.006,5.006,0,0,0,0,5V19a5.006,5.006,0,0,0,5,5H16.343a4.968,4.968,0,0,0,3.536-1.464l2.656-2.658A4.968,4.968,0,0,0,24,16.343V9.979A1,1,0,0,0,23,8.979ZM18.465,21.122a2.975,2.975,0,0,1-1.465.8V18a1,1,0,0,1,1-1h3.925a3.016,3.016,0,0,1-.8,1.464Z" />
                 </svg>
@@ -41,11 +41,11 @@
 
         <!-- Home -->
         <li class="flex justify-center items-center">
-            <NavLink href="@HomeUrl" Match="NavLinkMatch.All" class="p-2 rounded-xl flex justify-center items-center hover:bg-hover-color duration-300" ActiveClass="bg-[#CACACA]">
+            <NavLink href="@HomeUrl" Match="NavLinkMatch.All" class="hover:cursor-pointer p-2 rounded-xl flex justify-center items-center hover:bg-hover-color duration-150 active:scale-95 active:ease-out" ActiveClass="bg-[#CACACA]">
                 <svg xmlns="http://www.w3.org/2000/svg"
-                     class="w-6 h--6 fill-highlight hover:cursor-pointer"
-                     fill="currentColor"
-                     viewBox="0 0 24 24">
+                class="w-6 h--6 fill-highlight"
+                fill="currentColor"
+                viewBox="0 0 24 24">
                     <path d="M23.121,9.069,15.536,1.483a5.008,5.008,0,0,0-7.072,0L.879,9.069A2.978,2.978,0,0,0,0,11.19v9.817a3,3,0,0,0,3,3H21a3,3,0,0,0,3-3V11.19A2.978,2.978,0,0,0,23.121,9.069ZM15,22.007H9V18.073a3,3,0,0,1,6,0Zm7-1a1,1,0,0,1-1,1H17V18.073a5,5,0,0,0-10,0v3.934H3a1,1,0,0,1-1-1V11.19a1.008,1.008,0,0,1,.293-.707L9.878,2.9a3.008,3.008,0,0,1,4.244,0l7.585,7.586A1.008,1.008,0,0,1,22,11.19Z" />
                 </svg>
             </NavLink>
@@ -53,11 +53,11 @@
 
         <!-- Graphs -->
         <li class="flex justify-center items-center">
-            <NavLink href="/graphs" Match="NavLinkMatch.Prefix" class="p-2 rounded-xl flex justify-center items-center hover:bg-hover-color duration-300" ActiveClass="bg-[#CACACA]">
+            <NavLink href="/graphs" Match="NavLinkMatch.Prefix" class="hover:cursor-pointer p-2 rounded-xl flex justify-center items-center hover:bg-hover-color duration-150 active:scale-95 active:ease-out" ActiveClass="bg-[#CACACA]">
                 <svg xmlns="http://www.w3.org/2000/svg"
-                     class="w-6 h-6 fill-highlight hover:cursor-pointer"
-                     fill="currentColor"
-                     viewBox="0 0 24 24">
+                     class="w-6 h-6 fill-highlight"
+                fill="currentColor"
+                viewBox="0 0 24 24">
                     <path d="M23,22H3a1,1,0,0,1-1-1V1A1,1,0,0,0,0,1V21a3,3,0,0,0,3,3H23a1,1,0,0,0,0-2Z" />
                     <path d="M15,20a1,1,0,0,0,1-1V12a1,1,0,0,0-2,0v7A1,1,0,0,0,15,20Z" />
                     <path d="M7,20a1,1,0,0,0,1-1V12a1,1,0,0,0-2,0v7A1,1,0,0,0,7,20Z" />
@@ -68,11 +68,11 @@
         </li>
         <!-- Search -->
         <li class="flex justify-center items-center">
-            <button @onclick="ToggleSearch" class="hover:bg-hover-color duration-300 p-2 rounded-xl flex justify-center items-center @(_isSearchVisible ? "bg-[#CACACA]" : "")">
+            <button @onclick:stopPropagation @onclick="SearchState.ToggleOverlay" class="hover:cursor-pointer hover:bg-hover-color p-2 rounded-xl flex justify-center duration-150 active:scale-95 active:ease-out items-center @(_isSearchVisible ? "bg-[#CACACA]" : "")">
                 <svg xmlns="http://www.w3.org/2000/svg"
-                     class="w-6 h-6 fill-highlight hover:cursor-pointer"
-                     fill="currentColor"
-                     viewBox="0 0 24 24">
+                class="w-6 h-6 fill-highlight"
+                fill="currentColor"
+                viewBox="0 0 24 24">
                     <path d="M23.707,22.293l-5.969-5.969a10.016,10.016,0,1,0-1.414,1.414l5.969,5.969a1,1,0,0,0,1.414-1.414ZM10,18a8,8,0,1,1,8-8A8.009,8.009,0,0,1,10,18Z" />
                 </svg>
             </button>
@@ -80,57 +80,46 @@
     </ul>
 </nav>
 
-@if (_isSearchVisible)
-{
-    <div class="fixed inset-0" @onclick="ToggleSearch"></div>
-    <div class="absolute inset-0 m-auto h-fit z-20" @onclick:stopPropagation>
-        <div class="max-w-xl mx-auto">
-            <SearchBar InitialTerms="SearchState.Current.Tags"
-                       OnSearchChanged="OnRawSearchChanged" />
-        </div>
-    </div>
-}
 
 <div class="h-screen overflow-y-auto bg-surface-main p-2 w-full">
-  @if (!Sections.Any())
-  {
-    <p class="text-center text-gray-500">No notes yet.</p>
-  }
-  else
-  {
-    @foreach (var part in Sections)
+    @if (!Sections.Any())
     {
-      <div class="mb-6">
-        <!-- Section header -->
-        <h5 class="px-4 py-2 text-2xl font-semibold uppercase">
-          @part.Title
-        </h5>
+        <p class="text-center text-gray-500">No notes yet.</p>
+    }
+    else
+    {
+        @foreach (var part in Sections)
+        {
+            <div class="mb-6">
 
-        <!-- Card wrapper for this section -->
+                <h5 class="px-4 py-2 text-2xl font-semibold uppercase">
+                    @part.Title
+                </h5>
+
                 <div class="bg-[#F6F6F6] shadow rounded-md divide-y divide-gray-200 overflow-hidden">
-          @foreach (var note in part.Notes)
-          {
-            var url = $"/note/{note.Id}";
-            var isActive = NavManager.Uri.EndsWith(url);
+                    @foreach (var note in part.Notes)
+                    {
+                        var url = $"/note/{note.Id}";
+                        var isActive = NavManager.Uri.EndsWith(url);
                         var baseLinkClasses = "flex duration-300 justify-between items-center px-4 py-1 transition-colors hover:bg-hover-color";
                         var linkBg = isActive ? "bg-[#CACACA] text-surface-main" : "hover:bg-hover-color";
 
-            <a href="@url"
-               class="@($"{baseLinkClasses} {linkBg}")">
+                        <a href="@url"
+                        class="@($"{baseLinkClasses} {linkBg}")">
                             <span class="font-medium">@note.NameTag</span>
-                            <span class="text-sm text-[#888888]">@note.Date.Date.ToString("dd.MM.yyyy")</span>
-            </a>
-          }
-        </div>
-      </div>
+                            <span class="text-sm text-surface-muted">@note.Date.Date.ToString("dd.MM.yyyy")</span>
+                        </a>
+                    }
+                </div>
+            </div>
+        }
     }
-  }
 </div>
 
 @code {
+    [Parameter] public EventCallback OnToggleSidebar { get; set; }
     private string HomeUrl = "/";
     private bool _isSearchVisible;
-    private ObjectId _userId;
     private List<WorkoutNote> _allNotes = new();
     private List<Section> Sections = new();
 
@@ -141,9 +130,8 @@
         AppState.NotesChanged += OnNotesChanged;
         await LoadNotes();
 
-        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
-        var idStr = auth.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!ObjectId.TryParse(idStr, out var userId))
+        var userId = await CurrentUser.GetUserIdAsync();
+        if (userId is null)
             return;
 
         var notes = await NoteService.GetNotesForUserAsync();
@@ -153,7 +141,7 @@
         {
             latest = new WorkoutNote
                 {
-                    UserId = userId,
+                    UserId = userId.Value,
                     Date = DateTimeOffset.UtcNow,
                     NameTag = "New Note",
                     NoteText = "",
@@ -186,9 +174,13 @@
         var iso = await JS.InvokeAsync<string>("getClientTime");
         var client = DateTimeOffset.Parse(iso);
 
+        var userId = await CurrentUser.GetUserIdAsync();
+        if (userId is null)
+            return;
+
         var note = new WorkoutNote
             {
-                UserId = _userId,
+                UserId = userId.Value,
                 Date = client,
                 NameTag = "New Note",
                 NoteText = "",
@@ -265,18 +257,11 @@
 
         return sections;
     }
-
-    private void OnRawSearchChanged(List<string> terms)
-    {
-        var crit = SearchService.BuildCriteria(terms);
-        SearchState.Update(crit);
-    }
        private void OnSearchStateChanged()
       {
         ApplySearchFilter();
         InvokeAsync(StateHasChanged);
       }
-
 
     private void ToggleSearch() => _isSearchVisible = !_isSearchVisible;
 

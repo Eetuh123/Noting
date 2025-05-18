@@ -1,6 +1,4 @@
-﻿using System.Security.Claims;
-using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Components.Authorization;
 using MongoDB.Bson;
 using Noting.Helpers;
 
@@ -11,26 +9,31 @@ namespace Noting.Services
     {
         ValueTask<ObjectId?> GetUserIdAsync();
     }
-    public class CurrentUserService : ICurrentUserService
+    public class MvcCurrentUserService : ICurrentUserService
+    {
+        private readonly IHttpContextAccessor _httpCtx;
+        public MvcCurrentUserService(IHttpContextAccessor httpContextAccessor)
+            => _httpCtx = httpContextAccessor;
+
+        public ValueTask<ObjectId?> GetUserIdAsync()
+        {
+            var user = _httpCtx.HttpContext?.User;
+            return new ValueTask<ObjectId?>(user?.GetUserId());
+        }
+    }
+
+    public class BlazorCurrentUserService : ICurrentUserService
     {
         private readonly AuthenticationStateProvider _auth;
-        private readonly IHttpContextAccessor _httpCtx;
-
-        public CurrentUserService(IHttpContextAccessor httpContextAccessor, AuthenticationStateProvider authProvider)
-        {
-            _httpCtx = httpContextAccessor;
-            _auth = authProvider;
-        }
-
+        public BlazorCurrentUserService(AuthenticationStateProvider authProvider)
+            => _auth = authProvider;
 
         public async ValueTask<ObjectId?> GetUserIdAsync()
         {
-            var user = _httpCtx.HttpContext?.User;
-            if (user?.Identity?.IsAuthenticated == true)
-                return user.GetUserId();
-
             var state = await _auth.GetAuthenticationStateAsync();
             return state.User.GetUserId();
         }
     }
+
 }
+

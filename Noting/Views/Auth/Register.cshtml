@@ -3,20 +3,21 @@
     ViewData["Title"] = "Register";
 }
 
-<div class="flex h-screen">
-    <!-- Left Section -->
-    <div class="w-1/2 flex items-center justify-center  text-surface-dark">
-        <div class="text-left px-40">
+<div class="flex flex-col md:flex-row items-center justify-center h-screen w-full px-4">
+    <!-- Left Side -->
+    <div class="w-full md:w-1/2 flex items-center justify-center text-surface-dark">
+        <div class="md:text-left md:px-20 lg:px-40">
             <h1 class="text-5xl font-bold mb-4">Nice to meet you</h1>
             <p class="text-3xl">Create an account and start noting your progress.</p>
         </div>
     </div>
 
     <!-- Right Section -->
-    <div class="w-1/2 flex items-center justify-center">
-        <form asp-controller="Auth" asp-action="RegisterUser" method="post" class="w-full max-w-sm space-y-6">
+    <div class="w-full md:w-1/2 flex items-center justify-center py-20 md:py-0">
+        <div class="w-full md:max-w-sm space-y-4 text-center">
+        <form asp-controller="Auth" asp-action="RegisterUser" method="post" class="w-full md:max-w-sm space-y-6">
             <h2 class="text-2xl font-semibold text-center">Register</h2>
-            <div class="relative">
+            <div class="relative mb-0">
                 @Html.TextBoxFor(u => u.Email, new
                     {
                         @class = "peer w-full px-4 py-2 placeholder:opacity-0 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-highlight focus:border-transparent",
@@ -32,14 +33,16 @@
                     Email
                 </label>
             </div>
+            @Html.ValidationMessageFor(u => u.Email, "", new { @class = "text-red-500 ml-2" })
 
-            <div class="relative mt-4">
+            <div class="relative mt-4 mb-0">
                 @Html.TextBoxFor(u => u.Name, new
                     {
                         @class = "peer w-full px-4 py-2 placeholder:opacity-0 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-highlight focus:border-transparent",
                         id = "name",
                         placeholder = "Name"
                     })
+
                 <label for="name"
                        class="absolute left-4 transform origin-left
                 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100
@@ -49,8 +52,8 @@
                     Name
                 </label>
             </div>
-
-            <div class="relative mt-4">
+            @Html.ValidationMessageFor(u => u.Name, "", new { @class = "text-red-500  ml-2" })
+            <div class="relative mt-4 mb-0">
                 @Html.PasswordFor(u => u.PasswordHash, new
                     {
                         @class = "peer w-full px-4 py-2 placeholder:opacity-0 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-highlight focus:border-transparent",
@@ -66,10 +69,13 @@
                     Password
                 </label>
             </div>
-
-            <button type="submit" class="w-full bg-highlight duration-300 border-2 border-surface-main hover:cursor-pointer hover:border-2 hover:border-highlight hover:text-highlight hover:bg-surface-main text-white font-semibold py-2 rounded">
+            <div class="ml-2">
+            @Html.ValidationMessageFor(u => u.PasswordHash, "", new { @class = "text-red-500" })
+            </div>
+            <button type="submit" class="mt-4 w-full bg-highlight duration-150 border-2 border-surface-main hover:cursor-pointer hover:border-2 hover:border-highlight hover:text-highlight hover:bg-surface-main text-white font-semibold py-2 rounded active:scale-95 active:ease-out">
                 Register
             </button>
         </form>
+        </div>
     </div>
 </div>

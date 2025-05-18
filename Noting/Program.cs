@@ -42,7 +42,8 @@ builder.Services.AddScoped<ExerciseService>();
 builder.Services.AddScoped<WorkoutNoteService>();
 builder.Services.AddScoped<AppState>();
 builder.Services.AddScoped<SearchState>();
-builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<ICurrentUserService, MvcCurrentUserService>();
+builder.Services.AddScoped<BlazorCurrentUserService>();
 
 builder.Services.AddApexCharts();
 builder.Services.AddApplicationInsightsTelemetry();
@@ -57,14 +58,14 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 1) Blazor’s real-time SignalR endpoint
+
 app.MapBlazorHub();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "/",
     defaults: new { controller = "Auth", action = "Welcome" });
-// 2) MVC controllers under specific prefixes
+
 app.MapControllerRoute(
     name: "auth",
     pattern: "Auth/{action=Login}/{id?}",
@@ -76,10 +77,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
-// 3) Razor Pages (so _Host.cshtml can be served)
 app.MapRazorPages();
 
-// 4) Fallback *all* other URLs (like /hello) to the Blazor host page
 app.MapFallbackToPage("/_Host");
 
 app.Run();

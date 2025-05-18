@@ -11,7 +11,7 @@
 
     @foreach (var term in Terms)
     {
-        <span class="flex bg-surface-muted items-center text-surface-main text-sm px-3 py-1 rounded-full cursor-pointer"
+        <span class="flex bg-surface-muted items-center text-surface-main text-sm font-bold px-3 py-1 rounded-full cursor-pointer"
               @onclick="() => RemoveTerm(term)">
             @term
         </span>
