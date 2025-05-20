@@ -134,7 +134,7 @@
         if (userId is null)
             return;
 
-        var notes = await NoteService.GetNotesForUserAsync();
+        var notes = await NoteService.GetNotesForUserAsync(userId.Value);
         var latest = notes.OrderByDescending(n => n.Date).FirstOrDefault();
 
         if (latest == null)
@@ -164,7 +164,8 @@
 
     private async Task LoadNotes()
     {
-        _allNotes = await NoteService.GetNotesForUserAsync();
+        var userId = await CurrentUser.GetUserIdAsync();
+        _allNotes = await NoteService.GetNotesForUserAsync(userId.Value);
         ApplySearchFilter();
         Sections = BuildSections(_allNotes);
     }
@@ -189,7 +190,7 @@
 
         note = NoteService.SaveNote(note);
 
-        _allNotes = await NoteService.GetNotesForUserAsync();
+        _allNotes = await NoteService.GetNotesForUserAsync(userId.Value);
         Sections = BuildSections(_allNotes);
 
         NavManager.NavigateTo($"/note/{note.Id}");

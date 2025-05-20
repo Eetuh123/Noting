@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Noting.Services;
 using MongoDB.Bson;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Noting.Controllers
 {
@@ -24,14 +25,38 @@ namespace Noting.Controllers
             _logger = logger;
             _passwordHasher = new PasswordHasher<User>();
         }
-
-        public IActionResult Register()
+        [AllowAnonymous]
+        public async Task<IActionResult> Register()
         {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userId = ObjectId.Parse(userIdString);
+                var notes = await _noteService.GetNotesForUserAsync(userId);
+                var latest = notes
+                    .OrderByDescending(n => n.Date)
+                    .FirstOrDefault();
+                if (latest != null)
+                return Redirect($"/note/{latest.Id}");
+            }
             return View();
         }
-        public IActionResult Login()
+        [AllowAnonymous]
+        public async Task<IActionResult> Login()
         {
-            return View();
+            if (User.Identity?.IsAuthenticated == true)
+            {
+
+                var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userId = ObjectId.Parse(userIdString);
+                var notes = await _noteService.GetNotesForUserAsync(userId);
+                var latest = notes
+                    .OrderByDescending(n => n.Date)
+                    .FirstOrDefault();
+                if (latest != null)
+                    return Redirect($"/note/{latest.Id}");
+            }
+                return View();
         }
         public IActionResult Welcome()
         {
@@ -67,7 +92,7 @@ namespace Noting.Controllers
 
             await SignInUserAsync(existingUser);
 
-            var notes = await _noteService.GetNotesForUserAsync();
+            var notes = await _noteService.GetNotesForUserAsync(existingUser.Id);
             var latest = notes
                 .OrderByDescending(n => n.Date)
                 .FirstOrDefault();

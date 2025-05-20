@@ -11,7 +11,7 @@ namespace Noting.Models
         private static MongoServerAddress? address;
         private static MongoClientSettings? settings;
         private static MongoClient? client;
-        public static IMongoDatabase database;
+        public static IMongoDatabase? database;
 
         public static void Initialize(IConfiguration Configuration)
         {

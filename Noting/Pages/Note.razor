@@ -81,12 +81,17 @@ else
         IsLoaded = false;
         SaveStatus = "";
 
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = auth.User;
+        var claim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var currentUserId = ObjectId.Parse(claim);
+
         await CountNotes();
 
         if (!ObjectId.TryParse(Id, out var noteId))
             throw new Exception("Invalid note ID");
 
-        CurrentNote = await NoteService.GetNoteByIdAsync(noteId);
+        CurrentNote = await NoteService.GetNoteByIdAsync(noteId, currentUserId);
         if (CurrentNote == null)
             throw new Exception("Note not found");
 
@@ -98,7 +103,7 @@ else
     }
     private async Task CountNotes()
     {
-        var all = await NoteService.GetNotesForUserAsync();
+        var all = await NoteService.GetNotesForUserAsync(UserId);
         _totalNotes = all.Count;
     }
     private async Task OnDeleteCurrentNote()
@@ -109,7 +114,7 @@ else
             SaveStatus = "Cannot delete the last remaining note.";
             return;
         }
-        var notes = (await NoteService.GetNotesForUserAsync())
+        var notes = (await NoteService.GetNotesForUserAsync(UserId))
                         .OrderByDescending(n => n.Date)
                         .ToList();
 

@@ -35,8 +35,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var userId = await CurrentUser.GetUserIdAsync();
         _allExercises = await ExerciseService.GetAllForCurrentUser();
-        _allNotes = await NoteService.GetNotesForUserAsync();
+        _allNotes = await NoteService.GetNotesForUserAsync(userId.Value);
 
         SearchState.OnChange += ReapplyFilters;
 
