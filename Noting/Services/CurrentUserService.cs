@@ -21,7 +21,7 @@ namespace Noting.Services
             return new ValueTask<ObjectId?>(user?.GetUserId());
         }
     }
-
+    //Something is completly fucked up with this??? REMEMBER TO FIX
     public class BlazorCurrentUserService : ICurrentUserService
     {
         private readonly AuthenticationStateProvider _auth;

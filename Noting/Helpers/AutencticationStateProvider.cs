@@ -3,7 +3,7 @@ using MongoDB.Bson;
 using System.Security.Claims;
 
 namespace Noting.Helpers
-{
+{   //Something is completly fucked up with this??? REMEMBER TO FIX
     public static class AuthenticationStateProviderHelper
     {
         public static ObjectId? GetUserId(this ClaimsPrincipal user)
